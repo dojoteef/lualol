@@ -1,4 +1,4 @@
-package = "lualol"
+package = "LuaLoL"
 version = "scm-1"
 
 source = {
@@ -11,7 +11,7 @@ description = {
     LuaLoL is an easy way to access the League of Legends API using Lua. It includes a simple caching
     mechanism that's built-in.
   ]],
-  homepage = "http://github.com/dojoteef/lualol",
+  homepage = "http://dojoteef.github.com/lualol",
   maintainer = "dojoteef@gmail.com",
   license = "MIT/X11",
 }

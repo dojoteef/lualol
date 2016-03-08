@@ -1,5 +1,5 @@
 project = 'LuaLoL'
-description = 'League of Legends API Lua Libraries 0.0.1'
+description = 'League of Legends API Lua Libraries 0.1'
 full_description = 'The documentation is available @{01-introduction.md|here}.'
 title = 'LuaLoL Documentation'
 dir = 'api'
