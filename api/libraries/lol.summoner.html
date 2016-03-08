@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>lol Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>lol</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../libraries/lol.api.html">lol.api</a></li>
+  <li><a href="../libraries/lol.cache.html">lol.cache</a></li>
+  <li><a href="../libraries/lol.game.html">lol.game</a></li>
+  <li><a href="../libraries/lol.matchlist.html">lol.matchlist</a></li>
+  <li><strong>lol.summoner</strong></li>
+</ul>
+<h2>Manual</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../examples/getsummoner.lua.html">getsummoner.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>lol.summoner</code></h1>
+<p>Allows for making queries against the League of Legends Summoner API</p>
+<p> By first creating an api object and creating a new summoner object from it
+ you can then make queries against the League of Legends Summoner API.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#summoner">summoner (apiObj)</a></td>
+	<td class="summary">Create a new summoner object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_summoner.standardizeSummonerName">_summoner.standardizeSummonerName (summonerName)</a></td>
+	<td class="summary">Given a Summoner name, put it into the League of Legends API standardized format</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_summoner:getByName">_summoner:getByName (name, callback)</a></td>
+	<td class="summary">Get a Summoner from the League of Legends API given a Summoner name</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_summoner:getByNames">_summoner:getByNames (names, callback)</a></td>
+	<td class="summary">Get multiple Summoners from the League of Legends API given their Summoner names</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "summoner"></a>
+    <strong>summoner (apiObj)</strong>
+    </dt>
+    <dd>
+    Create a new summoner object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">apiObj</span>
+
+<ul>
+    <li>the api object that communicates with the League of Legends server</li>
+</ul>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new summoner object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_summoner.standardizeSummonerName"></a>
+    <strong>_summoner.standardizeSummonerName (summonerName)</strong>
+    </dt>
+    <dd>
+    Given a Summoner name, put it into the League of Legends API standardized format
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">summonerName</span>
+
+<ul>
+    <li>the Summoner name to standardize</li>
+</ul>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a Summoner name in the League of Legends API standardized format
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_summoner:getByName"></a>
+    <strong>_summoner:getByName (name, callback)</strong>
+    </dt>
+    <dd>
+    Get a Summoner from the League of Legends API given a Summoner name
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+
+<ul>
+    <li>the Summoner name of the Summoner to retreive</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">callback</span>
+
+<ul>
+    <li>a callback which receives the response from the API</li>
+</ul>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_summoner:getByNames"></a>
+    <strong>_summoner:getByNames (names, callback)</strong>
+    </dt>
+    <dd>
+    Get multiple Summoners from the League of Legends API given their Summoner names
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">names</span>
+
+<ul>
+    <li>an array-like table with the list of Summoner names to retreive</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">callback</span>
+
+<ul>
+    <li>a callback which receives the response from the API</li>
+    <li>NOTE: Since you may only retreive 40 summoners at a time the callback may</li>
+    <li>be called multiple times from a single call to summoner:getByNames</li>
+</ul>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2016-03-08 08:38:06 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

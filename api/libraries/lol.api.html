@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>lol Documentation</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>lol</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Libraries</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><strong>lol.api</strong></li>
+  <li><a href="../libraries/lol.cache.html">lol.cache</a></li>
+  <li><a href="../libraries/lol.game.html">lol.game</a></li>
+  <li><a href="../libraries/lol.matchlist.html">lol.matchlist</a></li>
+  <li><a href="../libraries/lol.summoner.html">lol.summoner</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../manual/01-introduction.md.html">Introduction</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="../examples/getsummoner.lua.html">getsummoner.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>lol.api</code></h1>
+<p>Basic access to the League of Legends API</p>
+
+<p> This module is one of the core modules that everything is built on top of.</p>
+<p> If you want to use any of the premade endpoint modules such as
+ 'lol.summoner' you will need to create an api object first and then use that
+ to create the specific endpoint module.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#api">api (keyfile, regionid, cachedir, options)</a></td>
+	<td class="summary">Create a new api object which is bound to a region and a specific cache</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_api.isvalid">_api.isvalid (obj)</a></td>
+	<td class="summary">Check if the passed in table is a valid api object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_api:get">_api:get (pathTemplate, pathParams, optional)</a></td>
+	<td class="summary">Make a get request to the League of Legends API</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "api"></a>
+    <strong>api (keyfile, regionid, cachedir, options)</strong>
+    </dt>
+    <dd>
+    Create a new api object which is bound to a region and a specific cache
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">keyfile</span>
+
+<ul>
+    <li>location of the file with the League of Legends API Key in it</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">regionid</span>
+
+<ul>
+    <li>the id of the region to speak to (see https://developer.riotgames.com/docs/regional-endpoints)</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">cachedir</span>
+
+<ul>
+    <li>a directory to cache responses from the API (NOTE: a subdirectory will be made for the region inside the cache directory)</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">options</span>
+
+<ul>
+    <li>a table with optional parameters, currently the only optional parameter is setting verbose to true</li>
+</ul>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new api object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_api.isvalid"></a>
+    <strong>_api.isvalid (obj)</strong>
+    </dt>
+    <dd>
+    Check if the passed in table is a valid api object
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">obj</span>
+
+<ul>
+    <li>object to validate</li>
+</ul>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if valid, false otherwise
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_api:get"></a>
+    <strong>_api:get (pathTemplate, pathParams, optional)</strong>
+    </dt>
+    <dd>
+    Make a get request to the League of Legends API
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">pathTemplate</span>
+
+<ul>
+    <li>a string template using ${variable} for replaceable components</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">pathParams</span>
+
+<ul>
+    <li>the values of the variables used in the template, note that ${region} and ${platformId} are automatically filled in so no need to specify them</li>
+</ul>
+
+        </li>
+        <li><span class="parameter">optional</span>
+
+<ul>
+    <li>optional values such as the callback function and query table</li>
+</ul>
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if valid, false otherwise
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2016-03-08 08:38:06 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
