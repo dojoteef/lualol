@@ -1,0 +1,30 @@
+language: python
+sudo: false
+
+env:
+  - LUA="lua 5.1"
+  - LUA="lua 5.2"
+  - LUA="lua 5.3"
+  - LUA="luajit 2.0"
+  - LUA="luajit 2.1"
+
+before_install:
+  - pip install hererocks
+  - hererocks here -r^ --$LUA # Install latest LuaRocks version
+                              # plus the Lua version for this build job
+                              # into 'here' subdirectory
+  - export PATH=$PATH:$PWD/here/bin # Add directory with all installed binaries to PATH
+  - luarocks install busted
+  - luarocks install luacheck
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
+
+install:
+  - luarocks make
+
+script:
+  - luacheck --std max lol-scm-1.rockspec
+  - busted --coverage
+
+after_success:
+  - luacov-coveralls -e $TRAVIS_BUILD_DIR/here

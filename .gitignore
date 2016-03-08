@@ -1,2 +1,4 @@
 .DS_Store
-keys/
+.cache/
+.keys/
+doc/api/
