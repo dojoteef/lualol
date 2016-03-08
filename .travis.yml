@@ -23,7 +23,7 @@ install:
   - luarocks make
 
 script:
-  - luacheck --std max lol-scm-1.rockspec
+  - luacheck --std max lualol-scm-1.rockspec
   - busted --coverage
 
 after_success:

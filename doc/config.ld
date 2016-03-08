@@ -1,13 +1,13 @@
-project = 'lol'
+project = 'LuaLoL'
 description = 'League of Legends API Lua Libraries 0.0.1'
 full_description = 'The documentation is available @{01-introduction.md|here}.'
-title = 'lol Documentation'
+title = 'LuaLoL Documentation'
 dir = 'api'
 style = '!fixed'
 use_markdown_titles = true
 topics = 'manual'
 examples = {'../examples'}
-package = 'lol'
+package = 'lualol'
 format = 'markdown'
 sort_modules=true
 file = '../src/lol'
