@@ -36,5 +36,5 @@ build = {
     ["lol.matchlist"] = "src/lol/matchlist.lua",
     ["lol.summoner"] = "src/lol/summoner.lua",
   },
-  copy_directories = {"doc","tests"}
+  copy_directories = {"doc","spec"}
 }
