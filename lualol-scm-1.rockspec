@@ -1,4 +1,4 @@
-package = "lol"
+package = "lualol"
 version = "scm-1"
 
 source = {
