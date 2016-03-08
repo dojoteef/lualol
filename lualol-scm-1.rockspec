@@ -2,28 +2,26 @@ package = "lualol"
 version = "scm-1"
 
 source = {
-  --TODO
-  --url = "git://github.com/dojoteef/lol.git",
-  url = "...",
+  url = "git://github.com/dojoteef/lualol.git",
 }
 
 description = {
   summary = "A Lua library for accessing the League of Legends API",
   detailed = [[
-    lol is an easy way to access the League of Legends API using Lua. It includes a simple caching
+    LuaLoL is an easy way to access the League of Legends API using Lua. It includes a simple caching
     mechanism that's built-in.
   ]],
-  -- TODO
-  --homepage = "http://dojoteef.github.com/lol",
-  homepage = "http://...",
+  homepage = "http://github.com/dojoteef/lualol",
   maintainer = "dojoteef@gmail.com",
   license = "MIT/X11",
 }
 
 dependencies = {
-  "penlight",
+  "lua-cjson",
+  "luacrypto",
   "luasec",
   "luasocket",
+  "penlight",
 }
 
 build = {

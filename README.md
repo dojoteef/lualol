@@ -26,8 +26,10 @@ that I can run some analysis over the data.
 ##Requirements
 
 This library depends on [Penlight](https://github.com/stevedonovan/Penlight)
-(pl), [LuaSocket](https://github.com/diegonehab/luasocket), and
-[LuaSec](https://github.com/brunoos/luasec).
+(pl), [LuaSocket](https://github.com/diegonehab/luasocket), 
+[LuaSec](https://github.com/brunoos/luasec),
+[LuaCrypto](https://github.com/mkottman/luacrypto), and
+[lua-cjson](https://github.com/mpx/lua-cjson).
 
 ### Installation
 
