@@ -96,34 +96,42 @@ function _api.isvalid(obj)
     return true
 end
 
+function _api:buildUrlString(turl)
+    local params = tablex.merge({region=self.region.id,platformId=self.region.platformId}, turl.params or {}, true)
+    tablex.transform(function(v) return url.quote(tostring(v)) end, params)
+    local pathString = text.Template(turl.path):substitute(params)
+
+    local fullQuery = tablex.merge({api_key=self.key}, turl.query or {}, true)
+    local queryString = table.concat(tablex.pairmap(function(k,v) return url.quote(tostring(k))..'='..url.quote(tostring(v)) end, fullQuery), '&')
+
+    return self.region.host..pathString..'?'..queryString
+end
+
 --- Make a get request to the League of Legends API
--- @param pathTemplate - a string template using ${variable} for replaceable components
--- @param pathParams - the values of the variables used in the template, note that ${region} and ${platformId} are automatically filled in so no need to specify them
--- @param optional - optional values such as the callback function and query table
+-- @param turl - a table with the url parameters
+--   * path - a string path using ${variable} for replaceable components
+--   * params - the values of the variables used in the path, note that ${region} and ${platformId} are automatically filled in so no need to specify them
+--   * query - table of query key/value pairs
+-- @param callback - an optional callback function
 -- @return true if valid, false otherwise
-function _api:get(pathTemplate, pathParams, optional)
-    local allPathParams = tablex.merge({region=self.region.id,platformId=self.region.platformId}, pathParams or {}, true)
-    tablex.transform(function(v) return url.quote(tostring(v)) end, allPathParams)
-    local pathString = text.Template(pathTemplate):substitute(allPathParams)
-
-    local query = tablex.merge({api_key=self.key}, optional and optional.query or {}, true)
-    local queryString = table.concat(tablex.pairmap(function(k,v) return url.quote(tostring(k))..'='..url.quote(tostring(v)) end, query))
-
-    local urlString = self.region.host..pathString..'?'..queryString
+function _api:get(turl, callback)
+    local urlString = self:buildUrlString(turl)
     if self.options.verbose then print(urlString) end
 
     local res, code, headers, status = https.request(urlString)
     if self.options.verbose then print(status) end
 
-    local callback = optional and optional.callback
     if callback then
-        local ok,decoded = pcall(function() return cjson.decode(res) end)
-        if ok then
-            callback(decoded, code, headers)
+        if headers and headers['content-type'] and string.match(headers['content-type'],'application/json') then
+            local ok,decoded = pcall(function() return cjson.decode(res) end)
+            if ok then
+                callback(decoded, code, headers)
+            else
+                callback(nil, code, headers)
+            end
         else
-            callback(nil, code, headers)
+            callback(res, code, headers)
         end
-
     end
 end
 

@@ -44,11 +44,11 @@ function _matchlist:getBySummonerId(summonerId, filters, callback)
 
     local cache = self.api.cache
     local cacheKey = {api='matchlist',summonerId=summonerId,filters=filters}
-    local onResponse = function(res, code)
+    local onResponse = function(res, code, headers)
         cache:set(cacheKey,res,60*60)
 
         if callback then
-            callback(res, code)
+            callback(res, code, headers)
         end
     end
 
@@ -56,8 +56,11 @@ function _matchlist:getBySummonerId(summonerId, filters, callback)
     if matchlist and callback then
         callback(matchlist)
     else
-        local path = '/api/lol/${region}/v${version}/matchlist/by-summoner/${summonerId}'
-        self.api:get(path, {version=self.version,summonerId=summonerId}, {callback=onResponse})
+        local url = {
+            path='/api/lol/${region}/v${version}/matchlist/by-summoner/${summonerId}',
+            params={version=self.version,summonerId=summonerId},
+        }
+        self.api:get(url, onResponse)
     end
 end
 

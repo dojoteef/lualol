@@ -58,22 +58,24 @@ end
 --   * be called multiple times from a single call to summoner:getByNames
 function _summoner:getByNames(names, callback)
     local cache = self.api.cache
-    local onResponse = function(res, code)
+    local onResponse = function(res, code, headers)
         for name,summoner in pairs(res) do
             cache:set(cacheKeyForName(name),summoner.id)
             cache:set(cacheKeyForId(summoner.id),summoner,24*60*60)
         end
 
         if callback then
-            callback(res, code)
+            callback(res, code, headers)
         end
     end
 
     local cachedCount = 0
     local cachedSummoners = {}
     local maxNamesPerQuery = 40
-    local pathParams = {version=self.version}
-    local path = '/api/lol/${region}/v${version}/summoner/by-name/${summonerNames}'
+    local url = {
+        params={version=self.version},
+        path='/api/lol/${region}/v${version}/summoner/by-name/${summonerNames}',
+    }
 
     for index,name in ipairs(names) do
         local summonerName = self.standardizeSummonerName(name)
@@ -88,21 +90,21 @@ function _summoner:getByNames(names, callback)
             cachedCount = cachedCount + 1
             cachedSummoners[summonerName] = summoner
         else
-            local nameString = pathParams.summonerNames
-            pathParams.summonerNames = nameString and nameString..','..summonerName or summonerName
+            local nameString = url.params.summonerNames
+            url.params.summonerNames = nameString and nameString..','..summonerName or summonerName
 
             if (index - cachedCount) % maxNamesPerQuery == 0 then
-                self.api:get(path, pathParams, {callback=onResponse})
-                pathParams.summonerNames = nil
+                self.api:get(url, onResponse)
+                url.params.summonerNames = nil
             end
         end
     end
 
-    if pathParams.summonerNames then
-        self.api:get(path, pathParams, {callback=onResponse})
+    if url.params.summonerNames then
+        self.api:get(url, onResponse)
     end
 
-    if cachedCount and callback then
+    if cachedCount > 0 and callback then
         callback(cachedSummoners)
     end
 end

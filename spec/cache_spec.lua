@@ -26,7 +26,8 @@ describe('lol.cache', function()
 
         teardown(function()
             if path.isdir(cacheDir) then
-                path.rmdir(cacheDir)
+                local dir = require('pl.dir')
+                dir.rmtree(cacheDir)
             end
         end)
 
@@ -44,12 +45,14 @@ describe('lol.cache', function()
                 -- mock out time
                 mockTime = os.time()
                 origTimeFn = os.time
-                os.time = function(date) return date and origTimeFn(date) or mockTime end
+                stub(os, "time", function(date)
+                    return date and origTimeFn(date) or mockTime
+                end)
             end)
 
             teardown(function()
                 -- restore time back to the original
-                os.time = origTimeFn
+                os.time:revert()
             end)
 
             after_each(function()
