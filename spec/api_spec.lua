@@ -134,7 +134,10 @@ describe('lol.api', function()
                 assert.is_equal(parsed.scheme, 'https')
                 assert.is_equal(parsed.host, host)
                 assert.is_equal(parsed.path, '/some/endpoint')
-                assert.is_equal(parsed.query, 'api_key='..testApi.key..'&somekey=somevalue')
+
+                local tablex = require('pl.tablex')
+                local queryString = table.concat(tablex.pairmap(function(k,v) return k..'='..v end, tablex.merge({api_key=testApi.key}, args.query, true)), '&')
+                assert.is_equal(parsed.query, queryString)
             end)
 
             it("puts it all together", function()
@@ -149,7 +152,10 @@ describe('lol.api', function()
                 assert.is_equal(parsed.scheme, 'https')
                 assert.is_equal(parsed.host, host)
                 assert.is_equal(parsed.path, '/some/endpoint')
-                assert.is_equal(parsed.query, 'api_key='..testApi.key..'&somekey=somevalue')
+
+                local tablex = require('pl.tablex')
+                local queryString = table.concat(tablex.pairmap(function(k,v) return k..'='..v end, tablex.merge({api_key=testApi.key}, args.query, true)), '&')
+                assert.is_equal(parsed.query, queryString)
             end)
         end)
 

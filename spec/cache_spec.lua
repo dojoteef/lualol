@@ -60,11 +60,11 @@ describe('lol.cache', function()
             end)
 
             local randomKey = function()
-                return 'some key'..tostring(math.random())
+                return 'some key'..tostring(math.random(9999))
             end
 
             local randomValue = function()
-                return 'some value'..tostring(math.random())
+                return 'some value'..tostring(math.random(9999))
             end
 
             it('can store an entry', function()
