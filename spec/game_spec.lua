@@ -64,7 +64,7 @@ describe('lol.game', function()
             it('uses api get on cache miss', function()
                 local s1 = spy.new(function() end)
                 local s2 = stub(testGame.api, 'get',function() s1() end)
-                testGame:getBySummonerId(123456789, s1)
+                testGame:getBySummonerId(123456789, {callback=s1})
 
                 assert.spy(s1).called(1)
                 assert.stub(s2).called(1)
@@ -77,24 +77,33 @@ describe('lol.game', function()
                 s2:revert()
             end)
 
-            it('caches api entries for 5 hours', function()
+            local cacheForXSecsFn = function(secs)
                 local mockRes = {{summonerId=123456789}, 200, {}}
 
                 local api = testGame.api
                 local cache = api.cache
+                local cacheSecs = secs or 5*60*60
 
                 local s1 = spy.new(function() end)
                 local s2 = stub(cache, 'set')
                 local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                testGame:getBySummonerId(123456789, s1)
+                testGame:getBySummonerId(123456789, {callback=s1,expire=secs})
 
                 assert.spy(s1).called(1)
                 assert.spy(s1).called_with(unpack(mockRes))
 
                 local cacheKey = {api='game',summonerId=123456789}
-                assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1],5*60*60)
+                assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1],cacheSecs)
                 s2:revert()
                 s3:revert()
+            end
+
+            it('caches api entries for 5 hours by default', function()
+                cacheForXSecsFn()
+            end)
+
+            it('caches api entries for the specified amount of time', function()
+                cacheForXSecsFn(60)
             end)
 
             it('will return previously cached entries', function()
@@ -102,7 +111,7 @@ describe('lol.game', function()
                 local cache = testGame.api.cache
                 local s1 = spy.new(function() end)
                 local s2 = stub(cache, 'get', function() return mockDto end)
-                testGame:getBySummonerId(mockDto.summonerId, s1)
+                testGame:getBySummonerId(mockDto.summonerId, {callback=s1})
 
                 assert.spy(s1).called(1)
                 assert.spy(s1).called_with(mockDto)

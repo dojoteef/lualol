@@ -8,6 +8,8 @@
 local api = require('lol.api')
 local utils = require('pl.utils')
 
+--- This class encapsulates manipulating the League of Legends Summoner API
+-- @type summoner
 local _summoner = {}
 _summoner.__index = _summoner
 setmetatable(_summoner, {
@@ -16,9 +18,9 @@ setmetatable(_summoner, {
     end})
 
 --- Create a new summoner object
--- @param apiObj - the api object that communicates with the League of Legends server
+-- @param api the @{api} object that communicates with the League of Legends server
 -- @return a new summoner object
--- @function summoner
+-- @function summoner:summoner
 function _summoner.new(apiObj)
     utils.assert_arg(1,apiObj,'table',api.isvalid,'not a valid api object')
 
@@ -45,35 +47,55 @@ local function cacheKeyForRunes(summonerId)
     return {api='summoner',data='runes',summonerId=summonerId}
 end
 
+local function cacheSummonerName(cache, name, id)
+    -- Currently no expiration time for name -> id mapping since I
+    -- assume a name change doesn't allow someone to take the old name.
+    -- If that isn't true I need to allow it to expire as well. 
+    name = _summoner.standardizeSummonerName(name)
+    cache:set(cacheKeyForName(name),id)
+
+    return name
+end
+
 --- Given a Summoner name, put it into the League of Legends API standardized format
--- @param summonerName - the Summoner name to standardize
+-- @tparam string summonerName the Summoner name to standardize
 -- @return a Summoner name in the League of Legends API standardized format
+-- @function summoner.standardizeSummonerName
 function _summoner.standardizeSummonerName(summonerName)
     return string.lower(string.gsub(summonerName, '%s+', ''))
 end
 
 --- Get a Summoner from the League of Legends API given a Summoner name
--- @param name - the Summoner name of the Summoner to retreive
--- @param callback - a callback which receives the response from the API
-function _summoner:getByName(name, callback)
-    return self:getByNames({name}, callback)
+-- @tparam string name the Summoner name of the Summoner to retreive
+-- @tparam table opts a table with optional parameters:
+-- @tparam long opts.expire how long in seconds to cache a response (defaults to 24 hours, _i.e. 24\*60\*60_)
+-- @tparam function opts.callback a callback which receives the response from the API (data, code, headers)
+--   _NOTE_: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getByName
+-- @function summoner:getByName
+function _summoner:getByName(name, opts)
+    return self:getByNames({name}, opts)
 end
 
 --- Get multiple Summoners from the League of Legends API given their Summoner names
--- @param names - an array-like table with the list of Summoner names to retreive
--- @param callback - a callback which receives the response from the API
---   * NOTE: Since you may only retreive 40 summoners at a time the callback may
---   * be called multiple times from a single call to summoner:getByNames
-function _summoner:getByNames(names, callback)
+-- @tparam table names an array-like table with the list of Summoner names to retreive
+-- @tparam table opts a table with optional parameters:
+-- @tparam long opts.expire how long in seconds to cache a response (defaults to 24hrs, i.e. 24*60*60)
+-- @tparam function opts.callback a callback which receives the response from the API (data, code, headers)
+--   _NOTE_: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getByNames
+-- @function summoner:getByNames
+function _summoner:getByNames(names, opts)
+    opts = opts or {}
+
     local cache = self.api.cache
+    local expire = opts.expire or 24*60*60
     local onResponse = function(res, code, headers)
         for name,summoner in pairs(res) do
-            cache:set(cacheKeyForName(name),summoner.id)
-            cache:set(cacheKeyForId(summoner.id),summoner,24*60*60)
+            cacheSummonerName(cache, name, summoner.id)
+            cache:set(cacheKeyForId(summoner.id),summoner,expire)
         end
 
-        if callback then
-            callback(res, code, headers)
+        if opts.callback then
+            opts.callback(res, code, headers)
         end
     end
 
@@ -112,32 +134,53 @@ function _summoner:getByNames(names, callback)
         self.api:get(url, onResponse)
     end
 
-    if cachedCount > 0 and callback then
-        callback(cachedSummoners)
+    if cachedCount > 0 and opts.callback then
+        opts.callback(cachedSummoners)
     end
 end
 
---- Get multiple Summoners from the League of Legends API given their Summoner ids
--- @param ids - an array-like table with the list of Summoner ids to retreive
--- @param filter - optional parameter denoting what type of information to retreive
---   * valid values: 'name', 'masteries', 'runes'
--- @param callback - a callback which receives the response from the API
---   * NOTE: Since you may only retreive 40 summoners at a time the callback may
---   * be called multiple times from a single call to summoner:getByIds
-function _summoner:getByIds(ids, filter, callback)
+--- Get a Summoner, their runes, names, or masteries from the League of Legends API given their Summoner id
+-- @tparam long id Summoner id of the Summoner who's data to retreive
+-- @tparam table opts a table with optional parameters:
+-- @tparam string filter denotes what type of information to retreive, valid values:
+--   *'name'
+--   * 'masteries'
+--   * 'runes'
+-- @tparam long opts.expire how long in seconds to cache a response (defaults to 24hrs, i.e. 24*60*60)
+-- @tparam function opts.callback a callback which receives the response from the API (data, code, headers)
+--   _NOTE_: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getById
+-- @function summoner:getById
+function _summoner:getById(id, opts)
+    self:getByIds({id}, opts)
+end
+
+--- Get multiple Summoners, their runes, names, or masteries from the League of Legends API given their Summoner ids
+-- @tparam table ids an array-like table with the list of Summoner ids to retreive
+-- @tparam table opts a table with optional parameters:
+-- @tparam string filter denotes what type of information to retreive, valid values:
+--   *'name'
+--   * 'masteries'
+--   * 'runes'
+-- @tparam long opts.expire how long in seconds to cache a response (defaults to 24hrs, i.e. 24*60*60)
+-- @tparam function opts.callback a callback which receives the response from the API (data, code, headers)
+--   _NOTE_: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getIds
+-- @function summoner:getByIds
+function _summoner:getByIds(ids, opts)
+    opts = opts or {}
+
     local cache = self.api.cache
+    local expire = opts.expire or 24*60*60
     local onResponse = function(res, code, headers)
         local data = {}
         for _,summoner in pairs(res) do
-            local summonerName = self.standardizeSummonerName(summoner.name)
-            cache:set(cacheKeyForName(summonerName),summoner.id)
-            cache:set(cacheKeyForId(summoner.id),summoner,24*60*60)
+            local name = cacheSummonerName(cache, summoner.name, summoner.id)
+            cache:set(cacheKeyForId(summoner.id),summoner,expire)
 
-            data[summonerName] = summoner
+            data[name] = summoner
         end
 
-        if callback then
-            callback(data, code, headers)
+        if opts.callback then
+            opts.callback(data, code, headers)
         end
     end
 
@@ -152,81 +195,80 @@ function _summoner:getByIds(ids, filter, callback)
             local data = {}
             for idstr,name in pairs(res) do
                 local id = tonumber(idstr)
-                local summonerName = self.standardizeSummonerName(name)
-                cache:set(cacheKeyForName(summonerName),id)
+                cacheSummonerName(cache, name, id)
 
                 data[id] = name
             end
 
-            if callback then
-                callback(data, code, headers)
+            if opts.callback then
+                opts.callback(data, code, headers)
             end
         end,
         masteries=function(res, code, headers)
             local data = {}
             for idstr,val in pairs(res) do
                 local id = tonumber(idstr)
-                cache:set(cacheKeyForMasteries(id),val.pages,24*60*60)
+                cache:set(cacheKeyForMasteries(id),val.pages,expire)
 
                 data[id] = val.pages
             end
 
-            if callback then
-                callback(data, code, headers)
+            if opts.callback then
+                opts.callback(data, code, headers)
             end
         end,
         runes=function(res, code, headers)
             local data = {}
             for idstr,val in pairs(res) do
                 local id = tonumber(idstr)
-                cache:set(cacheKeyForRunes(id),val.pages,24*60*60)
+                cache:set(cacheKeyForRunes(id),val.pages,expire)
 
                 data[id] = val.pages
             end
 
-            if callback then
-                callback(data, code, headers)
+            if opts.callback then
+                opts.callback(data, code, headers)
             end
         end
     }
 
-    if filter then
-        utils.assert_arg(2,filter,'string',function() return onFilterResponse[filter] end,'not a valid api object')
+    if opts.filter then
+        utils.assert_arg(2,opts.filter,'string',function() return onFilterResponse[opts.filter] end,'not a valid api object')
     end
 
     local cachedCount = 0
     local cachedData = {}
-    local maxNamesPerQuery = 40
+    local maxIdsPerQuery = 40
     local url = {
-        params={version=self.version,filter=filter and '/'..filter or ''},
+        params={version=self.version,filter=opts.filter and '/'..opts.filter or ''},
         path='/api/lol/${region}/v${version}/summoner/${summonerIds}${filter}',
     }
 
     for index,summonerId in ipairs(ids) do
-        local cacheKeyFn = filter and cacheKeyForFilter[filter] or cacheKeyForId
+        local cacheKeyFn = opts.filter and cacheKeyForFilter[opts.filter] or cacheKeyForId
         local data = cache:get(cacheKeyFn(summonerId))
 
         if data then
-            local key = filter and summonerId or self.standardizeSummonerName(data.name)
-            cachedData[key] = filter and cacheKeyFn == cacheKeyForId and data.name or data
+            local key = opts.filter and summonerId or self.standardizeSummonerName(data.name)
+            cachedData[key] = opts.filter and cacheKeyFn == cacheKeyForId and data.name or data
             cachedCount = cachedCount + 1
         else
             local idString = url.params.summonerIds
             url.params.summonerIds = idString and idString..','..summonerId or summonerId
 
-            if (index - cachedCount) % maxNamesPerQuery == 0 then
-                self.api:get(url, onFilterResponse[filter] or onResponse)
+            if (index - cachedCount) % maxIdsPerQuery == 0 then
+                self.api:get(url, onFilterResponse[opts.filter] or onResponse)
                 url.params.summonerIds = nil
             end
         end
     end
 
     if url.params.summonerIds then
-        self.api:get(url, onFilterResponse[filter] or onResponse)
+        self.api:get(url, onFilterResponse[opts.filter] or onResponse)
     end
 
-    if cachedCount > 0 and callback then
-        callback(cachedData)
+    if cachedCount > 0 and opts.callback then
+        opts.callback(cachedData)
     end
 end
 

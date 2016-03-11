@@ -12,3 +12,4 @@ format = 'markdown'
 sort_modules=true
 file = '../src/lol'
 kind_names={topic='Manual',module='Libraries'}
+custom_tags={{'remark',title='Remarks'}}

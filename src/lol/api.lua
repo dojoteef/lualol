@@ -2,7 +2,7 @@
 --
 -- This module is one of the core modules that everything is built on top of.
 -- If you want to use any of the premade endpoint modules such as
--- 'lol.summoner' you will need to create an api object first and then use that
+-- `lol.summoner` you will need to create an api object first and then use that
 -- to create the specific endpoint module.
 --
 -- @module lol.api
@@ -19,37 +19,55 @@ local text = require('pl.text')
 local url = require('pl.url')
 local utils = require('pl.utils')
 
-local regions = {
-    br = { id = 'br',  platformId = 'BR1', host = 'https://br.api.pvp.net' },
-    eune = { id = 'eune',  platformId = 'EUN1', host = 'https://eune.api.pvp.net' },
-    euw = { id = 'euw',  platformId = 'EUW1', host = 'https://euw.api.pvp.net' },
-    kr = { id = 'kr',  platformId = 'KR', host = 'https://kr.api.pvp.net' },
-    lan = { id = 'lan',  platformId = 'LA1', host = 'https://lan.api.pvp.net' },
-    las = { id = 'las',  platformId = 'LA2', host = 'https://las.api.pvp.net' },
-    na = { id = 'na',  platformId = 'NA1', host = 'https://na.api.pvp.net' },
-    oce = { id = 'oce',  platformId = 'OC1', host = 'https://oce.api.pvp.net' },
-    tr = { id = 'tr',  platformId = 'TR1', host = 'https://tr.api.pvp.net' },
-    ru = { id = 'ru',  platformId = 'RU', host = 'https://ru.api.pvp.net' },
-    pbe = { id = 'pbe',  platformId = 'PBE1', host = 'https://pbe.api.pvp.net'  }
+--- This class encapsulates making requests again the League of Legends API
+-- @type api
+local _api = {
+    Regions = {
+        br = { id = 'br',  platformId = 'BR1', host = 'https://br.api.pvp.net' },
+        eune = { id = 'eune',  platformId = 'EUN1', host = 'https://eune.api.pvp.net' },
+        euw = { id = 'euw',  platformId = 'EUW1', host = 'https://euw.api.pvp.net' },
+        kr = { id = 'kr',  platformId = 'KR', host = 'https://kr.api.pvp.net' },
+        lan = { id = 'lan',  platformId = 'LA1', host = 'https://lan.api.pvp.net' },
+        las = { id = 'las',  platformId = 'LA2', host = 'https://las.api.pvp.net' },
+        na = { id = 'na',  platformId = 'NA1', host = 'https://na.api.pvp.net' },
+        oce = { id = 'oce',  platformId = 'OC1', host = 'https://oce.api.pvp.net' },
+        tr = { id = 'tr',  platformId = 'TR1', host = 'https://tr.api.pvp.net' },
+        ru = { id = 'ru',  platformId = 'RU', host = 'https://ru.api.pvp.net' },
+        pbe = { id = 'pbe',  platformId = 'PBE1', host = 'https://pbe.api.pvp.net'  }
+    }
 }
-
-local _api = {}
 _api.__index = _api
 setmetatable(_api, {
     __call = function(_,keyfile,regionid,cachedir,options)
         return _api.new(keyfile,regionid,cachedir,options)
-    end})
+    end
+})
+
+--- The list of valid regions that are available see [Regional Endpoints](https://developer.riotgames.com/docs/regional-endpoints).
+-- @field br **br.api.pvp.net**
+-- @field eune **eune.api.pvp.net**
+-- @field euw **euw.api.pvp.net**
+-- @field kr **kr.api.pvp.net**
+-- @field lan **lan.api.pvp.net**
+-- @field las **las.api.pvp.net**
+-- @field na **na.api.pvp.net**
+-- @field oce **oce.api.pvp.net**
+-- @field tr **tr.api.pvp.net**
+-- @field ru **ru.api.pvp.net**
+-- @field pbe **pbe.api.pvp.net**
+-- @table api.Regions
 
 --- Create a new api object which is bound to a region and a specific cache
--- @param keyfile - location of the file with the League of Legends API Key in it
--- @param regionid - the id of the region to speak to (see https://developer.riotgames.com/docs/regional-endpoints)
--- @param cachedir - a directory to cache responses from the API (NOTE: a subdirectory will be made for the region inside the cache directory)
--- @param options - a table with optional parameters, currently the only optional parameter is setting verbose to true
+-- @tparam string keyfile location of the file with the League of Legends API Key in it
+-- @tparam string regionid the id of the @{Regions|regional endpoint} to get data from
+-- @tparam string cachedir a directory to cache responses from the API (_NOTE_: a subdirectory will be made for the region inside the cache directory)
+-- @tparam table options a table with optional parameters
+-- @tparam bool options.verbose whether to have verbose out when making API requests
 -- @return a new api object
--- @function api
+-- @function api:api
 function _api.new(keyfile, regionid, cachedir, options)
     utils.assert_arg(1,keyfile,'string',path.isfile,'not a file')
-    utils.assert_arg(2,regionid,'string',function(id) return regions[id] end,'not a valid region')
+    utils.assert_arg(2,regionid,'string',function(id) return _api.Regions[id] end,'not a valid region')
 
     local apiCache
     if cachedir then
@@ -66,15 +84,16 @@ function _api.new(keyfile, regionid, cachedir, options)
     local obj = {}
     obj.cache = apiCache
     obj.key = stringx.strip(file.read(keyfile))
-    obj.region = regions[regionid]
+    obj.region = _api.Regions[regionid]
     obj.options = options or {}
 
     return setmetatable(obj, _api)
 end
 
 --- Check if the passed in table is a valid api object
--- @param obj - object to validate
+-- @param obj object to validate
 -- @return true if valid, false otherwise
+-- @function api.isvalid
 function _api.isvalid(obj)
     if type(obj) ~= 'table' then
         return false
@@ -89,7 +108,7 @@ function _api.isvalid(obj)
         return false
     end
 
-    if not tablex.search(regions,obj.region) then
+    if not tablex.search(_api.Regions,obj.region) then
         return false
     end
 
@@ -108,12 +127,13 @@ function _api:buildUrlString(turl)
 end
 
 --- Make a get request to the League of Legends API
--- @param turl - a table with the url parameters
---   * path - a string path using ${variable} for replaceable components
---   * params - the values of the variables used in the path, note that ${region} and ${platformId} are automatically filled in so no need to specify them
---   * query - table of query key/value pairs
--- @param callback - an optional callback function
+-- @tparam table url a table with the url parameters
+-- @tparam string url.path a string path using `${variable}` for replaceable components
+-- @tparam table url.params the values of the variables used in the path (_NOTE_: `${region}` and `${platformId}` are automatically filled in so no need to specify them)
+-- @tparam table url.query table of query key/value pairs
+-- @tparam function callback an optional callback function
 -- @return true if valid, false otherwise
+-- @function api:get
 function _api:get(turl, callback)
     local urlString = self:buildUrlString(turl)
     if self.options.verbose then print(urlString) end

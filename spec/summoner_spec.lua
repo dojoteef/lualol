@@ -66,9 +66,10 @@ describe('lol.summoner', function()
                 local testSummoner = summoner(testApi)
                 local s1 = spy.new(function() end)
                 local s2 = stub(testSummoner, 'getByNames')
-                testSummoner:getByName('one', s1)
+                local opts = {callback=s1}
+                testSummoner:getByName('one', opts)
 
-                assert.stub(s2).called_with(testSummoner, match.same({'one'}), s1)
+                assert.stub(s2).called_with(testSummoner, match.same({'one'}), opts)
                 s2:revert()
             end)
         end)
@@ -86,7 +87,7 @@ describe('lol.summoner', function()
             it('uses api get on cache miss', function()
                 local s1 = spy.new(function() end)
                 local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                testSummoner:getByNames({'one','two'}, s1)
+                testSummoner:getByNames({'one','two'}, {callback=s1})
 
                 assert.spy(s1).called(1)
                 assert.stub(s2).called(1)
@@ -99,15 +100,16 @@ describe('lol.summoner', function()
                 s2:revert()
             end)
 
-            it('caches api entries for 24 hours', function()
+            local cacheForXSecsFn = function(secs)
                 local mockRes = { {one={id=1},two={id=2}}, 200, {}}
                 local api = testSummoner.api
                 local cache = api.cache
+                local cacheSecs = secs or 24*60*60
 
                 local s1 = spy.new(function() end)
                 local s2 = stub(cache, 'set')
                 local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                testSummoner:getByNames({'one','two'}, s1)
+                testSummoner:getByNames({'one','two'}, {callback=s1,expire=secs})
 
                 assert.spy(s1).called(1)
                 assert.spy(s1).called_with(unpack(mockRes))
@@ -117,15 +119,23 @@ describe('lol.summoner', function()
                 assert.stub(s2).called_with(cache,match.same(cacheKey),1)
 
                 cacheKey = {api='summoner',summonerId=1}
-                assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1].one,24*60*60)
+                assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1].one,cacheSecs)
 
                 cacheKey = {api='summoner',summonerName='two'}
                 assert.stub(s2).called_with(cache,match.same(cacheKey),2)
 
                 cacheKey = {api='summoner',summonerId=2}
-                assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1].two,24*60*60)
+                assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1].two,cacheSecs)
                 s2:revert()
                 s3:revert()
+            end
+
+            it('caches api entries for 24 hours by default', function()
+                cacheForXSecsFn()
+            end)
+
+            it('caches api entries for the specified amount of time', function()
+                cacheForXSecsFn(60)
             end)
 
             it('will return previously cached entries', function()
@@ -141,7 +151,7 @@ describe('lol.summoner', function()
                     return table.remove(cacheEntries)
                 end)
                 local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                testSummoner:getByNames({'one','two','three'}, s1) 
+                testSummoner:getByNames({'one','two','three'}, {callback=s1}) 
 
                 assert.spy(s1).called(2) -- 1st for api, 2nd for cache
                 assert.spy(s1).called_with(unpack(mockRes))
@@ -178,7 +188,7 @@ describe('lol.summoner', function()
                     return table.remove(cacheEntries)
                 end)
                 local s3 = stub(api, 'get', function(_,_,c) c(unpack(table.remove(reslist))) end)
-                testSummoner:getByNames(names, s1) 
+                testSummoner:getByNames(names, {callback=s1}) 
 
                 assert.spy(s1).called(3) -- 1st & 2nd for api, 3rd for cache
                 assert.spy(s1).called_with(unpack(mockRes1))
@@ -187,6 +197,19 @@ describe('lol.summoner', function()
 
                 s2:revert()
                 s3:revert()
+            end)
+        end)
+
+        insulate('getById', function()
+            it('calls getByIds with the single id', function()
+                local testSummoner = summoner(testApi)
+                local s1 = spy.new(function() end)
+                local s2 = stub(testSummoner, 'getByIds')
+                local opts = {callback=s1}
+                testSummoner:getById(123456789, opts)
+
+                assert.stub(s2).called_with(testSummoner, match.same({123456789}), opts)
+                s2:revert()
             end)
         end)
 
@@ -204,7 +227,7 @@ describe('lol.summoner', function()
                 it('uses api get on cache miss', function()
                     local s1 = spy.new(function() end)
                     local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                    testSummoner:getByIds({1,2}, nil, s1)
+                    testSummoner:getByIds({1,2}, {callback=s1})
 
                     assert.spy(s1).called(1)
                     assert.stub(s2).called(1)
@@ -225,18 +248,19 @@ describe('lol.summoner', function()
                     return data
                 end
 
-                it('caches api entries for 24 hours', function()
+                local cacheForXSecsFn = function(secs)
                     local mockRes = { {}, 200, {}}
                     mockRes[1]['1']={id=1,name='one'}
                     mockRes[1]['2']={id=2,name='two'}
 
                     local api = testSummoner.api
                     local cache = api.cache
+                    local cacheSecs = secs or 24*60*60
 
                     local s1 = spy.new(function() end)
                     local s2 = stub(cache, 'set')
                     local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                    testSummoner:getByIds({1,2}, nil, s1)
+                    testSummoner:getByIds({1,2}, {callback=s1,expire=secs})
 
                     assert.spy(s1).called(1)
                     assert.spy(s1).called_with(unpack(dataFromRes(mockRes)))
@@ -246,15 +270,23 @@ describe('lol.summoner', function()
                     assert.stub(s2).called_with(cache,match.same(cacheKey),1)
 
                     cacheKey = {api='summoner',summonerId=1}
-                    assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['1'],24*60*60)
+                    assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['1'],cacheSecs)
 
                     cacheKey = {api='summoner',summonerName='two'}
                     assert.stub(s2).called_with(cache,match.same(cacheKey),2)
 
                     cacheKey = {api='summoner',summonerId=2}
-                    assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['2'],24*60*60)
+                    assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['2'],cacheSecs)
                     s2:revert()
                     s3:revert()
+                end
+
+                it('caches api entries for 24 hours by default', function()
+                    cacheForXSecsFn()
+                end)
+
+                it('caches api entries for the specified amount of time', function()
+                    cacheForXSecsFn(60)
                 end)
 
                 it('will return previously cached entries', function()
@@ -272,7 +304,7 @@ describe('lol.summoner', function()
                         return table.remove(cacheEntries)
                     end)
                     local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                    testSummoner:getByIds({1,2,3}, nil, s1) 
+                    testSummoner:getByIds({1,2,3}, {callback=s1}) 
 
                     assert.spy(s1).called(2) -- 1st for api, 2nd for cache
                     assert.spy(s1).called_with(unpack(dataFromRes(mockRes)))
@@ -311,7 +343,7 @@ describe('lol.summoner', function()
                         return table.remove(cacheEntries)
                     end)
                     local s3 = stub(api, 'get', function(_,_,c) c(unpack(table.remove(reslist))) end)
-                    testSummoner:getByIds(ids, nil, s1) 
+                    testSummoner:getByIds(ids, {callback=s1}) 
 
                     assert.spy(s1).called(3) -- 1st & 2nd for api, 3rd for cache
                     assert.spy(s1).called_with(unpack(dataFromRes(mockRes1)))
@@ -328,7 +360,7 @@ describe('lol.summoner', function()
                 it('uses api get on cache miss', function()
                     local s1 = spy.new(function() end)
                     local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                    testSummoner:getByIds({1,2}, filter, s1)
+                    testSummoner:getByIds({1,2}, {callback=s1,filter=filter})
 
                     assert.spy(s1).called(1)
                     assert.stub(s2).called(1)
@@ -349,7 +381,7 @@ describe('lol.summoner', function()
                     return data
                 end
 
-                it('caches api entries for 24 hours', function()
+                it('caches api entries', function()
                     local mockRes = { {}, 200, {}}
                     mockRes[1]['1']='one'
                     mockRes[1]['2']='two'
@@ -360,7 +392,7 @@ describe('lol.summoner', function()
                     local s1 = spy.new(function() end)
                     local s2 = stub(cache, 'set')
                     local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                    testSummoner:getByIds({1,2}, filter, s1)
+                    testSummoner:getByIds({1,2}, {callback=s1,filter=filter})
 
                     assert.spy(s1).called(1)
                     assert.spy(s1).called_with(unpack(dataFromRes(mockRes)))
@@ -390,7 +422,7 @@ describe('lol.summoner', function()
                         return table.remove(cacheEntries)
                     end)
                     local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                    testSummoner:getByIds({1,2,3}, filter, s1) 
+                    testSummoner:getByIds({1,2,3}, {callback=s1,filter=filter}) 
 
                     assert.spy(s1).called(2) -- 1st for api, 2nd for cache
                     assert.spy(s1).called_with(unpack(dataFromRes(mockRes)))
@@ -406,7 +438,7 @@ describe('lol.summoner', function()
                     it('uses api get on cache miss', function()
                         local s1 = spy.new(function() end)
                         local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                        testSummoner:getByIds({1,2}, filter, s1)
+                        testSummoner:getByIds({1,2}, {callback=s1,filter=filter})
 
                         assert.spy(s1).called(1)
                         assert.stub(s2).called(1)
@@ -427,30 +459,39 @@ describe('lol.summoner', function()
                         return data
                     end
 
-                    it('caches api entries for 24 hours', function()
+                    local cacheForXSecsFn = function(secs)
                         local mockRes = { {}, 200, {}}
                         mockRes[1]['1']={pages={}}
                         mockRes[1]['2']={pages={}}
 
                         local api = testSummoner.api
                         local cache = api.cache
+                        local cacheSecs = secs or 24*60*60
 
                         local s1 = spy.new(function() end)
                         local s2 = stub(cache, 'set')
                         local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                        testSummoner:getByIds({1,2}, filter, s1)
+                        testSummoner:getByIds({1,2}, {callback=s1,filter=filter,expire=secs})
 
                         assert.spy(s1).called(1)
                         assert.spy(s1).called_with(unpack(dataFromRes(mockRes)))
 
                         assert.stub(s2).called(2)
                         local cacheKey = {api='summoner',data=filter,summonerId=1}
-                        assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['1'].pages,24*60*60)
+                        assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['1'].pages,cacheSecs)
 
                         cacheKey = {api='summoner',data=filter,summonerId=2}
-                        assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['2'].pages,24*60*60)
+                        assert.stub(s2).called_with(cache,match.same(cacheKey),mockRes[1]['2'].pages,cacheSecs)
                         s2:revert()
                         s3:revert()
+                    end
+
+                    it('caches api entries for 24 hours by default', function()
+                        cacheForXSecsFn()
+                    end)
+
+                    it('caches api entries for the specified amount of time', function()
+                        cacheForXSecsFn(60)
                     end)
 
                     it('will return previously cached entries', function()
@@ -470,7 +511,7 @@ describe('lol.summoner', function()
                             return table.remove(cacheEntries)
                         end)
                         local s3 = stub(api, 'get', function(_,_,c) c(unpack(mockRes)) end)
-                        testSummoner:getByIds({1,2,3}, filter, s1) 
+                        testSummoner:getByIds({1,2,3}, {callback=s1,filter=filter}) 
 
                         assert.spy(s1).called(2) -- 1st for api, 2nd for cache
                         assert.spy(s1).called_with(unpack(dataFromRes(mockRes)))

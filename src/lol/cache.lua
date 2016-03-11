@@ -1,7 +1,7 @@
 --- Basic caching for the League of Legends API
 --
 -- This module is one of the core modules that everything is built on top of.
--- If you want to create an api object, a cache object will be created for you
+-- If you want to create an `api` object, a `cache` object will be created for you
 -- automatically.
 --
 -- @module lol.cache
@@ -21,6 +21,8 @@ local os = require('os')
 local path = require('pl.path')
 local utils = require('pl.utils')
 
+--- This class encapsulates making adding and retreiving elements from a cache
+-- @type cache
 local _cache = {}
 _cache.__index = _cache
 setmetatable(_cache, {
@@ -29,9 +31,9 @@ setmetatable(_cache, {
     end})
 
 --- Create a new cache object
--- @param cacheDir - the directory where to store cache entries
+-- @tparam string cacheDir the directory where to store cache entries
 -- @return a new cache object
--- @function cache
+-- @function cache:cache
 function _cache.new(cacheDir)
     utils.assert_arg(1,path.abspath(cacheDir),'string',path.isdir,'not a directory')
 
@@ -47,6 +49,7 @@ local function isExpired(entry)
 end
 
 --- Clear all entries from the cache. This includes on disk and in memory.
+-- @function cache:clearAll
 function _cache:clearAll()
     self.cache = {}
     for _,cacheFile in pairs(dir.getfiles(self.dir)) do
@@ -55,6 +58,7 @@ function _cache:clearAll()
 end
 
 --- Clear all expired entries from the cache. This includes on disk and in memory.
+-- @function cache:clearExpired
 function _cache:clearExpired()
     for digest,entry in pairs(self.cache) do
         if isExpired(entry) then
@@ -88,8 +92,9 @@ local function getFromDisk(basedir, digest)
 end
 
 --- Get an entry from the cache if it exists and hasn't expired.
--- @param key - the key of the entry to find
--- @return the value that was previously stored for that key
+-- @param key the key of the entry to find (**must be convertible to JSON**)
+-- @return the value that was previously stored for the given key
+-- @function cache:get
 function _cache:get(key)
     -- First check the in memory cache
     local keyString = cjson.encode(key)
@@ -111,16 +116,17 @@ function _cache:get(key)
 end
 
 --- Add an entry to the cache with an optional number of seconds before expiration
--- @param key - the key of the entry to store
--- @param value - the value of the entry to store
--- @param expireSecs - optional number of seconds before the entry expires
-function _cache:set(key, value, expireSecs)
+-- @param key the key of the entry to store (**must be convertible to JSON**)
+-- @param value the value of the entry to store (**must be convertible to JSON**)
+-- @param expires optional number of seconds before the entry expires
+-- @function cache:set
+function _cache:set(key, value, expires)
     local entry = {value=value}
     local keyString = cjson.encode(key)
 
-    if expireSecs then
+    if expires then
         local expireDate = os.date('*t')
-        expireDate.sec = expireDate.sec + expireSecs
+        expireDate.sec = expireDate.sec + expires
         entry.expires = os.time(expireDate)
     end
 
