@@ -32,7 +32,7 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_summoner">Class summoner </a></li>
 </ul>
 
 
@@ -43,6 +43,7 @@
   <li><a href="../libraries/lol.game.html">lol.game</a></li>
   <li><a href="../libraries/lol.matchlist.html">lol.matchlist</a></li>
   <li><strong>lol.summoner</strong></li>
+  <li><a href="../libraries/lol.utils.html">lol.utils</a></li>
 </ul>
 <h2>Manual</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
@@ -63,27 +64,31 @@
  you can then make queries against the League of Legends Summoner API.</p>
 
 
-<h2><a href="#Functions">Functions</a></h2>
+<h2><a href="#Class_summoner">Class summoner </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#summoner">summoner (apiObj)</a></td>
+	<td class="name" nowrap><a href="#summoner:summoner">summoner:summoner (api)</a></td>
 	<td class="summary">Create a new summoner object</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_summoner.standardizeSummonerName">_summoner.standardizeSummonerName (summonerName)</a></td>
+	<td class="name" nowrap><a href="#summoner:standardizeSummonerName">summoner:standardizeSummonerName (summonerName)</a></td>
 	<td class="summary">Given a Summoner name, put it into the League of Legends API standardized format</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_summoner:getByName">_summoner:getByName (name, callback)</a></td>
+	<td class="name" nowrap><a href="#summoner:getByName">summoner:getByName (name, opts)</a></td>
 	<td class="summary">Get a Summoner from the League of Legends API given a Summoner name</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_summoner:getByNames">_summoner:getByNames (names, callback)</a></td>
+	<td class="name" nowrap><a href="#summoner:getByNames">summoner:getByNames (names, opts)</a></td>
 	<td class="summary">Get multiple Summoners from the League of Legends API given their Summoner names</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_summoner:getByIds">_summoner:getByIds (ids, filter, callback)</a></td>
-	<td class="summary">Get multiple Summoners from the League of Legends API given their Summoner ids</td>
+	<td class="name" nowrap><a href="#summoner:getById">summoner:getById (id, opts, filter)</a></td>
+	<td class="summary">Get a Summoner, their runes, names, or masteries from the League of Legends API given their Summoner id</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#summoner:getByIds">summoner:getByIds (ids, opts, filter)</a></td>
+	<td class="summary">Get multiple Summoners, their runes, names, or masteries from the League of Legends API given their Summoner ids</td>
 	</tr>
 </table>
 
@@ -91,25 +96,25 @@
 <br/>
 
 
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    <h2 class="section-header has-description"><a name="Class_summoner"></a>Class summoner </h2>
 
+          <div class="section-description">
+          This class encapsulates manipulating the League of Legends Summoner API
+          </div>
     <dl class="function">
     <dt>
-    <a name = "summoner"></a>
-    <strong>summoner (apiObj)</strong>
+    <a name = "summoner:summoner"></a>
+    <strong>summoner:summoner (api)</strong>
     </dt>
     <dd>
     Create a new summoner object
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">apiObj</span>
-
-<ul>
-    <li>the api object that communicates with the League of Legends server</li>
-</ul>
-
+        <li><span class="parameter">api</span>
+         the <a href="../libraries/lol.api.html">api</a> object that communicates with the League of Legends server
         </li>
     </ul>
 
@@ -124,21 +129,19 @@
 
 </dd>
     <dt>
-    <a name = "_summoner.standardizeSummonerName"></a>
-    <strong>_summoner.standardizeSummonerName (summonerName)</strong>
+    <a name = "summoner:standardizeSummonerName"></a>
+    <strong>summoner:standardizeSummonerName (summonerName)</strong>
     </dt>
     <dd>
     Given a Summoner name, put it into the League of Legends API standardized format
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">summonerName</span>
-
-<ul>
-    <li>the Summoner name to standardize</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the Summoner name to standardize
         </li>
     </ul>
 
@@ -153,29 +156,32 @@
 
 </dd>
     <dt>
-    <a name = "_summoner:getByName"></a>
-    <strong>_summoner:getByName (name, callback)</strong>
+    <a name = "summoner:getByName"></a>
+    <strong>summoner:getByName (name, opts)</strong>
     </dt>
     <dd>
     Get a Summoner from the League of Legends API given a Summoner name
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">name</span>
-
-<ul>
-    <li>the Summoner name of the Summoner to retreive</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the Summoner name of the Summoner to retreive
+        </li>
+        <li><span class="parameter">opts</span> a table with optional parameters:
+        <ul>
+        <li><span class="parameter">expire</span>
+            <span class="types"><span class="type">long</span></span>
+         how long in seconds to cache a response (defaults to 24 hours, <em>i.e. 24*60*60</em>)
         </li>
         <li><span class="parameter">callback</span>
-
-<ul>
-    <li>a callback which receives the response from the API</li>
-</ul>
-
+            <span class="types"><span class="type">function</span></span>
+         a callback which receives the response from the API (data, code, headers)
+   <em>NOTE</em>: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getByName
         </li>
+        </li></ul>
     </ul>
 
 
@@ -184,30 +190,72 @@
 
 </dd>
     <dt>
-    <a name = "_summoner:getByNames"></a>
-    <strong>_summoner:getByNames (names, callback)</strong>
+    <a name = "summoner:getByNames"></a>
+    <strong>summoner:getByNames (names, opts)</strong>
     </dt>
     <dd>
     Get multiple Summoners from the League of Legends API given their Summoner names
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">names</span>
-
-<ul>
-    <li>an array-like table with the list of Summoner names to retreive</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table with the list of Summoner names to retreive
+        </li>
+        <li><span class="parameter">opts</span> a table with optional parameters:
+        <ul>
+        <li><span class="parameter">expire</span>
+            <span class="types"><span class="type">long</span></span>
+         how long in seconds to cache a response (defaults to 24hrs, i.e. 24<em>60</em>60)
         </li>
         <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">function</span></span>
+         a callback which receives the response from the API (data, code, headers)
+   <em>NOTE</em>: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getByNames
+        </li>
+        </li></ul>
+    </ul>
 
-<ul>
-    <li>a callback which receives the response from the API</li>
-    <li>NOTE: Since you may only retreive 40 summoners at a time the callback may</li>
-    <li>be called multiple times from a single call to summoner:getByNames</li>
-</ul>
 
+
+
+
+</dd>
+    <dt>
+    <a name = "summoner:getById"></a>
+    <strong>summoner:getById (id, opts, filter)</strong>
+    </dt>
+    <dd>
+    Get a Summoner, their runes, names, or masteries from the League of Legends API given their Summoner id
+
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">id</span>
+            <span class="types"><span class="type">long</span></span>
+         Summoner id of the Summoner who's data to retreive
+        </li>
+        <li><span class="parameter">opts</span> a table with optional parameters:
+        <ul>
+        <li><span class="parameter">expire</span>
+            <span class="types"><span class="type">long</span></span>
+         how long in seconds to cache a response (defaults to 24hrs, i.e. 24<em>60</em>60)
+        </li>
+        <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">function</span></span>
+         a callback which receives the response from the API (data, code, headers)
+   <em>NOTE</em>: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getById
+        </li>
+        </li></ul>
+        <li><span class="parameter">filter</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         denotes what type of information to retreive, valid values:
+   *'name'
+   * 'masteries'
+   * 'runes'
         </li>
     </ul>
 
@@ -217,38 +265,38 @@
 
 </dd>
     <dt>
-    <a name = "_summoner:getByIds"></a>
-    <strong>_summoner:getByIds (ids, filter, callback)</strong>
+    <a name = "summoner:getByIds"></a>
+    <strong>summoner:getByIds (ids, opts, filter)</strong>
     </dt>
     <dd>
-    Get multiple Summoners from the League of Legends API given their Summoner ids
+    Get multiple Summoners, their runes, names, or masteries from the League of Legends API given their Summoner ids
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">ids</span>
-
-<ul>
-    <li>an array-like table with the list of Summoner ids to retreive</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table with the list of Summoner ids to retreive
         </li>
-        <li><span class="parameter">filter</span>
-
-<ul>
-    <li>optional parameter denoting what type of information to retreive</li>
-    <li>valid values: 'name', 'masteries', 'runes'</li>
-</ul>
-
+        <li><span class="parameter">opts</span> a table with optional parameters:
+        <ul>
+        <li><span class="parameter">expire</span>
+            <span class="types"><span class="type">long</span></span>
+         how long in seconds to cache a response (defaults to 24hrs, i.e. 24<em>60</em>60)
         </li>
         <li><span class="parameter">callback</span>
-
-<ul>
-    <li>a callback which receives the response from the API</li>
-    <li>NOTE: Since you may only retreive 40 summoners at a time the callback may</li>
-    <li>be called multiple times from a single call to summoner:getByIds</li>
-</ul>
-
+            <span class="types"><span class="type">function</span></span>
+         a callback which receives the response from the API (data, code, headers)
+   <em>NOTE</em>: Since you may only retreive 40 summoners at a time the callback may be called multiple times from a single call to summoner:getIds
+        </li>
+        </li></ul>
+        <li><span class="parameter">filter</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         denotes what type of information to retreive, valid values:
+   *'name'
+   * 'masteries'
+   * 'runes'
         </li>
     </ul>
 
@@ -264,7 +312,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2016-03-08 23:13:12 </i>
+<i style="float:right;">Last updated 2016-03-11 09:42:07 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

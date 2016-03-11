@@ -32,7 +32,7 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_api">Class api </a></li>
 </ul>
 
 
@@ -43,6 +43,7 @@
   <li><a href="../libraries/lol.game.html">lol.game</a></li>
   <li><a href="../libraries/lol.matchlist.html">lol.matchlist</a></li>
   <li><a href="../libraries/lol.summoner.html">lol.summoner</a></li>
+  <li><a href="../libraries/lol.utils.html">lol.utils</a></li>
 </ul>
 <h2>Manual</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
@@ -62,22 +63,26 @@
 
 <p> This module is one of the core modules that everything is built on top of.</p>
 <p> If you want to use any of the premade endpoint modules such as
- 'lol.summoner' you will need to create an api object first and then use that
+ <a href="../libraries/lol.summoner.html#">lol.summoner</a> you will need to create an api object first and then use that
  to create the specific endpoint module.</p>
 
 
-<h2><a href="#Functions">Functions</a></h2>
+<h2><a href="#Class_api">Class api </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#api">api (keyfile, regionid, cachedir, options)</a></td>
+	<td class="name" nowrap><a href="#api.Regions">api.Regions</a></td>
+	<td class="summary">The list of valid regions that are available see <a href="https://developer.riotgames.com/docs/regional-endpoints">Regional Endpoints</a>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#api:api">api:api (keyfile, regionid, cachedir, options)</a></td>
 	<td class="summary">Create a new api object which is bound to a region and a specific cache</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_api.isvalid">_api.isvalid (obj)</a></td>
+	<td class="name" nowrap><a href="#api:isvalid">api:isvalid (obj)</a></td>
 	<td class="summary">Check if the passed in table is a valid api object</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_api:get">_api:get (turl, callback)</a></td>
+	<td class="name" nowrap><a href="#api:get">api:get (url, callback)</a></td>
 	<td class="summary">Make a get request to the League of Legends API</td>
 	</tr>
 </table>
@@ -86,47 +91,93 @@
 <br/>
 
 
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    <h2 class="section-header has-description"><a name="Class_api"></a>Class api </h2>
 
+          <div class="section-description">
+          This class encapsulates making requests again the League of Legends API
+          </div>
     <dl class="function">
     <dt>
-    <a name = "api"></a>
-    <strong>api (keyfile, regionid, cachedir, options)</strong>
+    <a name = "api.Regions"></a>
+    <strong>api.Regions</strong>
+    </dt>
+    <dd>
+    The list of valid regions that are available see <a href="https://developer.riotgames.com/docs/regional-endpoints">Regional Endpoints</a>.
+
+    </ul>
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">br</span>
+         <strong>br.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">eune</span>
+         <strong>eune.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">euw</span>
+         <strong>euw.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">kr</span>
+         <strong>kr.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">lan</span>
+         <strong>lan.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">las</span>
+         <strong>las.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">na</span>
+         <strong>na.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">oce</span>
+         <strong>oce.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">tr</span>
+         <strong>tr.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">ru</span>
+         <strong>ru.api.pvp.net</strong>
+        </li>
+        <li><span class="parameter">pbe</span>
+         <strong>pbe.api.pvp.net</strong>
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "api:api"></a>
+    <strong>api:api (keyfile, regionid, cachedir, options)</strong>
     </dt>
     <dd>
     Create a new api object which is bound to a region and a specific cache
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">keyfile</span>
-
-<ul>
-    <li>location of the file with the League of Legends API Key in it</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         location of the file with the League of Legends API Key in it
         </li>
         <li><span class="parameter">regionid</span>
-
-<ul>
-    <li>the id of the region to speak to (see https://developer.riotgames.com/docs/regional-endpoints)</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the id of the <a href="../libraries/lol.api.html#api.Regions">regional endpoint</a> to get data from
         </li>
         <li><span class="parameter">cachedir</span>
-
-<ul>
-    <li>a directory to cache responses from the API (NOTE: a subdirectory will be made for the region inside the cache directory)</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a directory to cache responses from the API (<em>NOTE</em>: a subdirectory will be made for the region inside the cache directory)
         </li>
-        <li><span class="parameter">options</span>
-
-<ul>
-    <li>a table with optional parameters, currently the only optional parameter is setting verbose to true</li>
-</ul>
-
+        <li><span class="parameter">options</span> a table with optional parameters
+        <ul>
+        <li><span class="parameter">verbose</span>
+            <span class="types"><span class="type">bool</span></span>
+         whether to have verbose out when making API requests
         </li>
+        </li></ul>
     </ul>
 
     <h3>Returns:</h3>
@@ -140,21 +191,18 @@
 
 </dd>
     <dt>
-    <a name = "_api.isvalid"></a>
-    <strong>_api.isvalid (obj)</strong>
+    <a name = "api:isvalid"></a>
+    <strong>api:isvalid (obj)</strong>
     </dt>
     <dd>
     Check if the passed in table is a valid api object
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">obj</span>
-
-<ul>
-    <li>object to validate</li>
-</ul>
-
+         object to validate
         </li>
     </ul>
 
@@ -169,31 +217,34 @@
 
 </dd>
     <dt>
-    <a name = "_api:get"></a>
-    <strong>_api:get (turl, callback)</strong>
+    <a name = "api:get"></a>
+    <strong>api:get (url, callback)</strong>
     </dt>
     <dd>
     Make a get request to the League of Legends API
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">turl</span>
-
-<ul>
-    <li>a table with the url parameters</li>
-    <li>path - a string path using ${variable} for replaceable components</li>
-    <li>params - the values of the variables used in the path, note that ${region} and ${platformId} are automatically filled in so no need to specify them</li>
-    <li>query - table of query key/value pairs</li>
-</ul>
-
+        <li><span class="parameter">url</span> a table with the url parameters
+        <ul>
+        <li><span class="parameter">path</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         a string path using <code>${variable}</code> for replaceable components
         </li>
+        <li><span class="parameter">params</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         the values of the variables used in the path (<em>NOTE</em>: <code>${region}</code> and <code>${platformId}</code> are automatically filled in so no need to specify them)
+        </li>
+        <li><span class="parameter">query</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         table of query key/value pairs
+        </li>
+        </li></ul>
         <li><span class="parameter">callback</span>
-
-<ul>
-    <li>an optional callback function</li>
-</ul>
-
+            <span class="types"><span class="type">function</span></span>
+         an optional callback function
         </li>
     </ul>
 
@@ -214,7 +265,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2016-03-08 23:13:12 </i>
+<i style="float:right;">Last updated 2016-03-11 09:42:07 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

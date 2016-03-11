@@ -32,7 +32,7 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_matchlist">Class matchlist </a></li>
 </ul>
 
 
@@ -43,6 +43,7 @@
   <li><a href="../libraries/lol.game.html">lol.game</a></li>
   <li><strong>lol.matchlist</strong></li>
   <li><a href="../libraries/lol.summoner.html">lol.summoner</a></li>
+  <li><a href="../libraries/lol.utils.html">lol.utils</a></li>
 </ul>
 <h2>Manual</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
@@ -63,14 +64,30 @@
  you can then make queries against the League of Legends Summoner API.</p>
 
 
-<h2><a href="#Functions">Functions</a></h2>
+<h2><a href="#Class_matchlist">Class matchlist </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#matchlist">matchlist (apiObj)</a></td>
+	<td class="name" nowrap><a href="#matchlist.Seasons">matchlist.Seasons</a></td>
+	<td class="summary">The seasons available to filter on</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#matchlist.RankedQueues">matchlist.RankedQueues</a></td>
+	<td class="summary">The ranked queues available to filter on</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#matchlist:matchlist">matchlist:matchlist (api)</a></td>
 	<td class="summary">Create a new matchlist object</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_matchlist:getBySummonerId">_matchlist:getBySummonerId (summonerId, filters, callback)</a></td>
+	<td class="name" nowrap><a href="#matchlist:validateFilters">matchlist:validateFilters (filters)</a></td>
+	<td class="summary">Validates that the passed in filters for correctness</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#matchlist:buildQuery">matchlist:buildQuery (filters)</a></td>
+	<td class="summary">Validates that the passed in filters for correctness</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#matchlist:getBySummonerId">matchlist:getBySummonerId (summonerId, opts)</a></td>
 	<td class="summary">Get a list of matches by Summoner id that statisfy the passed in filters</td>
 	</tr>
 </table>
@@ -79,25 +96,97 @@
 <br/>
 
 
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    <h2 class="section-header has-description"><a name="Class_matchlist"></a>Class matchlist </h2>
 
+          <div class="section-description">
+          This class encapsulates manipulating the League of Legends Matchlist API
+          </div>
     <dl class="function">
     <dt>
-    <a name = "matchlist"></a>
-    <strong>matchlist (apiObj)</strong>
+    <a name = "matchlist.Seasons"></a>
+    <strong>matchlist.Seasons</strong>
+    </dt>
+    <dd>
+    The seasons available to filter on
+
+    </ul>
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">PRESEASON3</span>
+        Preseason 3
+        </li>
+        <li><span class="parameter">SEASON3</span>
+        Season 3
+        </li>
+        <li><span class="parameter">PRESEASON2014</span>
+        Preseason 2014
+        </li>
+        <li><span class="parameter">SEASON2014</span>
+        Season 2014
+        </li>
+        <li><span class="parameter">PRESEASON2015</span>
+        Preseason 2015
+        </li>
+        <li><span class="parameter">SEASON2015</span>
+        Season 2015
+        </li>
+        <li><span class="parameter">PRESEASON2016</span>
+        Preseason 2016
+        </li>
+        <li><span class="parameter">SEASON2016</span>
+        Season 2016
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "matchlist.RankedQueues"></a>
+    <strong>matchlist.RankedQueues</strong>
+    </dt>
+    <dd>
+    The ranked queues available to filter on
+
+    </ul>
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">TEAM_BUILDER_DRAFT_RANKED_5x5</span>
+        Team Builder Draft Ranked 5x5
+        </li>
+        <li><span class="parameter">RANKED_SOLO_5x5</span>
+        Ranked Solo 5x5
+        </li>
+        <li><span class="parameter">RANKED_TEAM_3x3</span>
+        Ranked Team 3x3
+        </li>
+        <li><span class="parameter">RANKED_TEAM_5x5</span>
+        Ranked Team 5x5
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "matchlist:matchlist"></a>
+    <strong>matchlist:matchlist (api)</strong>
     </dt>
     <dd>
     Create a new matchlist object
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">apiObj</span>
-
-<ul>
-    <li>the api object that communicates with the League of Legends server</li>
-</ul>
-
+        <li><span class="parameter">api</span>
+         the <a href="../libraries/lol.api.html">api</a> object that communicates with the League of Legends server
         </li>
     </ul>
 
@@ -112,36 +201,154 @@
 
 </dd>
     <dt>
-    <a name = "_matchlist:getBySummonerId"></a>
-    <strong>_matchlist:getBySummonerId (summonerId, filters, callback)</strong>
+    <a name = "matchlist:validateFilters"></a>
+    <strong>matchlist:validateFilters (filters)</strong>
+    </dt>
+    <dd>
+    Validates that the passed in filters for correctness
+
+    <h3>Remarks:</h3>
+    <ul>
+         This method may mutate the passed in filters to make them valid (such as swapping <code>beginIndex</code> and <code>endIndex</code>)
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filters</span> a table specifying how to filter the matchlist
+        <ul>
+        <li><span class="parameter">championIds</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table of champion IDs to use for fetching games.
+        </li>
+        <li><span class="parameter">seasons</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table of <a href="../libraries/lol.matchlist.html#matchlist.Seasons">seasons</a> to use for fetching games,
+        </li>
+        <li><span class="parameter">rankedQueues</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table of <a href="../libraries/lol.matchlist.html#matchlist.RankedQueues">ranked queue</a> types to use for fetching games,
+        </li>
+        <li><span class="parameter">beginTime</span>
+            <span class="types"><span class="type">long</span></span>
+         the begin time to use for fetching games specified as epoch milliseconds
+        </li>
+        <li><span class="parameter">endTime</span>
+            <span class="types"><span class="type">long</span></span>
+         the end time to use for fetching games specified as epoch milliseconds
+        </li>
+        <li><span class="parameter">beginIndex</span>
+            <span class="types"><span class="type">long</span></span>
+         the begin index to use for fetching games
+        </li>
+        <li><span class="parameter">endIndex</span>
+            <span class="types"><span class="type">long</span></span>
+         the end index to use for fetching games
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new matchlist object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "matchlist:buildQuery"></a>
+    <strong>matchlist:buildQuery (filters)</strong>
+    </dt>
+    <dd>
+    Validates that the passed in filters for correctness
+
+    <h3>Remarks:</h3>
+    <ul>
+         This method may mutate the passed in filters to make them valid (such as swapping <code>beginIndex</code> and <code>endIndex</code>)
+    </ul>
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filters</span> a table specifying how to filter the matchlist
+        <ul>
+        <li><span class="parameter">championIds</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table of champion IDs to use for fetching games.
+        </li>
+        <li><span class="parameter">seasons</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table of <a href="../libraries/lol.matchlist.html#matchlist.Seasons">seasons</a> to use for fetching games,
+        </li>
+        <li><span class="parameter">rankedQueues</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         an array-like table of <a href="../libraries/lol.matchlist.html#matchlist.RankedQueues">ranked queue</a> types to use for fetching games,
+        </li>
+        <li><span class="parameter">beginTime</span>
+            <span class="types"><span class="type">long</span></span>
+         the begin time to use for fetching games specified as epoch milliseconds
+        </li>
+        <li><span class="parameter">endTime</span>
+            <span class="types"><span class="type">long</span></span>
+         the end time to use for fetching games specified as epoch milliseconds
+        </li>
+        <li><span class="parameter">beginIndex</span>
+            <span class="types"><span class="type">long</span></span>
+         the begin index to use for fetching games
+        </li>
+        <li><span class="parameter">endIndex</span>
+            <span class="types"><span class="type">long</span></span>
+         the end index to use for fetching games
+        </li>
+        </li></ul>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new matchlist object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "matchlist:getBySummonerId"></a>
+    <strong>matchlist:getBySummonerId (summonerId, opts)</strong>
     </dt>
     <dd>
     Get a list of matches by Summoner id that statisfy the passed in filters
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">summonerId</span>
-
-<ul>
-    <li>the id of the Summoner whose matchlist you wish to retreive</li>
-</ul>
-
+            <span class="types"><span class="type">long</span></span>
+         the id of the Summoner whose matchlist you wish to retreive
         </li>
-        <li><span class="parameter">filters</span>
+        <li><span class="parameter">opts</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         a table of optional parameters</p>
 
 <ul>
-    <li>a table specifying how to filter the matchlist</li>
-    <li>NOTE: this isn't functional yet, you must pass in an empty table for now</li>
+    <li><code>expire:</code> how long in seconds to cache a response (defaults to 1 hour, <em>i.e. 60*60</em>)</li>
+    <li><code>filters:</code> a table specifying how to filter the matchlist
+    <ul>
+        <li><code>championIds:</code> an array-like table of champion IDs to use for fetching games.</li>
+        <li><code>seasons:</code> an array-like table of <a href="../libraries/lol.matchlist.html#matchlist.Seasons">seasons</a> to use for fetching games,</li>
+        <li><code>rankedQueues:</code> an array-like table of <a href="../libraries/lol.matchlist.html#matchlist.RankedQueues">ranked queue</a> types to use for fetching games,</li>
+        <li><code>beginTime:</code> the begin time to use for fetching games specified as epoch milliseconds</li>
+        <li><code>endTime:</code> the end time to use for fetching games specified as epoch milliseconds</li>
+        <li><code>beginIndex:</code> the begin index to use for fetching games</li>
+        <li><code>endIndex:</code> the end index to use for fetching games</li>
+    </ul></li>
+    <li><code>callback:</code> a callback which receives the response from the API (data, code, headers)</li>
 </ul>
 
-        </li>
-        <li><span class="parameter">callback</span>
-
-<ul>
-    <li>a callback which receives the response from the API</li>
-</ul>
-
+<p>
         </li>
     </ul>
 
@@ -157,7 +364,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2016-03-08 23:13:12 </i>
+<i style="float:right;">Last updated 2016-03-11 09:42:07 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

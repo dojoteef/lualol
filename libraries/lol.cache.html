@@ -32,7 +32,7 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_cache">Class cache </a></li>
 </ul>
 
 
@@ -43,6 +43,7 @@
   <li><a href="../libraries/lol.game.html">lol.game</a></li>
   <li><a href="../libraries/lol.matchlist.html">lol.matchlist</a></li>
   <li><a href="../libraries/lol.summoner.html">lol.summoner</a></li>
+  <li><a href="../libraries/lol.utils.html">lol.utils</a></li>
 </ul>
 <h2>Manual</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
@@ -61,30 +62,30 @@
 <p>Basic caching for the League of Legends API</p>
 
 <p> This module is one of the core modules that everything is built on top of.</p>
-<p> If you want to create an api object, a cache object will be created for you
+<p> If you want to create an <a href="../libraries/lol.api.html">api</a> object, a <a href="../libraries/lol.cache.html">cache</a> object will be created for you
  automatically.</p>
 
 
-<h2><a href="#Functions">Functions</a></h2>
+<h2><a href="#Class_cache">Class cache </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#cache">cache (cacheDir)</a></td>
+	<td class="name" nowrap><a href="#cache:cache">cache:cache (cacheDir)</a></td>
 	<td class="summary">Create a new cache object</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_cache:clearAll">_cache:clearAll ()</a></td>
+	<td class="name" nowrap><a href="#cache:clearAll">cache:clearAll ()</a></td>
 	<td class="summary">Clear all entries from the cache.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_cache:clearExpired">_cache:clearExpired ()</a></td>
+	<td class="name" nowrap><a href="#cache:clearExpired">cache:clearExpired ()</a></td>
 	<td class="summary">Clear all expired entries from the cache.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_cache:get">_cache:get (key)</a></td>
+	<td class="name" nowrap><a href="#cache:get">cache:get (key)</a></td>
 	<td class="summary">Get an entry from the cache if it exists and hasn't expired.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#_cache:set">_cache:set (key, value, expireSecs)</a></td>
+	<td class="name" nowrap><a href="#cache:set">cache:set (key, value, expires)</a></td>
 	<td class="summary">Add an entry to the cache with an optional number of seconds before expiration</td>
 	</tr>
 </table>
@@ -93,25 +94,26 @@
 <br/>
 
 
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    <h2 class="section-header has-description"><a name="Class_cache"></a>Class cache </h2>
 
+          <div class="section-description">
+          This class encapsulates making adding and retreiving elements from a cache
+          </div>
     <dl class="function">
     <dt>
-    <a name = "cache"></a>
-    <strong>cache (cacheDir)</strong>
+    <a name = "cache:cache"></a>
+    <strong>cache:cache (cacheDir)</strong>
     </dt>
     <dd>
     Create a new cache object
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">cacheDir</span>
-
-<ul>
-    <li>the directory where to store cache entries</li>
-</ul>
-
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         the directory where to store cache entries
         </li>
     </ul>
 
@@ -126,12 +128,13 @@
 
 </dd>
     <dt>
-    <a name = "_cache:clearAll"></a>
-    <strong>_cache:clearAll ()</strong>
+    <a name = "cache:clearAll"></a>
+    <strong>cache:clearAll ()</strong>
     </dt>
     <dd>
     Clear all entries from the cache.  This includes on disk and in memory.
 
+    </ul>
 
 
 
@@ -140,12 +143,13 @@
 
 </dd>
     <dt>
-    <a name = "_cache:clearExpired"></a>
-    <strong>_cache:clearExpired ()</strong>
+    <a name = "cache:clearExpired"></a>
+    <strong>cache:clearExpired ()</strong>
     </dt>
     <dd>
     Clear all expired entries from the cache.  This includes on disk and in memory.
 
+    </ul>
 
 
 
@@ -154,28 +158,25 @@
 
 </dd>
     <dt>
-    <a name = "_cache:get"></a>
-    <strong>_cache:get (key)</strong>
+    <a name = "cache:get"></a>
+    <strong>cache:get (key)</strong>
     </dt>
     <dd>
     Get an entry from the cache if it exists and hasn't expired.
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">key</span>
-
-<ul>
-    <li>the key of the entry to find</li>
-</ul>
-
+         the key of the entry to find (<strong>must be convertible to JSON</strong>)
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        the value that was previously stored for that key
+        the value that was previously stored for the given key
     </ol>
 
 
@@ -183,35 +184,24 @@
 
 </dd>
     <dt>
-    <a name = "_cache:set"></a>
-    <strong>_cache:set (key, value, expireSecs)</strong>
+    <a name = "cache:set"></a>
+    <strong>cache:set (key, value, expires)</strong>
     </dt>
     <dd>
     Add an entry to the cache with an optional number of seconds before expiration
 
+    </ul>
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">key</span>
-
-<ul>
-    <li>the key of the entry to store</li>
-</ul>
-
+         the key of the entry to store (<strong>must be convertible to JSON</strong>)
         </li>
         <li><span class="parameter">value</span>
-
-<ul>
-    <li>the value of the entry to store</li>
-</ul>
-
+         the value of the entry to store (<strong>must be convertible to JSON</strong>)
         </li>
-        <li><span class="parameter">expireSecs</span>
-
-<ul>
-    <li>optional number of seconds before the entry expires</li>
-</ul>
-
+        <li><span class="parameter">expires</span>
+         optional number of seconds before the entry expires
         </li>
     </ul>
 
@@ -227,7 +217,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2016-03-08 23:13:12 </i>
+<i style="float:right;">Last updated 2016-03-11 09:42:07 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
