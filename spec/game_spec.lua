@@ -62,19 +62,17 @@ describe('lol.game', function()
             end)
 
             it('uses api get on cache miss', function()
-                local s1 = spy.new(function() end)
-                local s2 = stub(testGame.api, 'get',function() s1() end)
-                testGame:getBySummonerId(123456789, {callback=s1})
+                local s1 = stub(testGame.api, 'get',function() end)
+                testGame:getBySummonerId(123456789)
 
-                assert.spy(s1).called(1)
-                assert.stub(s2).called(1)
+                assert.stub(s1).called(1)
 
                 local url = {
                     path='/api/lol/${region}/v${version}/game/by-summoner/${summonerId}/recent',
                     params={version=testGame.version,summonerId=123456789},
                 }
-                assert.stub(s2).called_with(testGame.api, match.same(url),match.is_function())
-                s2:revert()
+                assert.stub(s1).called_with(testGame.api, match.same(url),match.is_function())
+                s1:revert()
             end)
 
             local cacheForXSecsFn = function(secs)

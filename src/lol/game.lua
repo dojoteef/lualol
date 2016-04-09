@@ -1,7 +1,7 @@
 --- Allows for making queries against the League of Legends Game API
 --
 -- By first creating an api object and creating a new game object from it
--- you can then make queries against the League of Legends Summoner API.
+-- you can then make queries against the League of Legends Game API.
 --
 -- @module lol.game
 

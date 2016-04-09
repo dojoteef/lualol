@@ -158,7 +158,7 @@ end
 -- @tparam table ids an array-like table with the list of Summoner ids to retreive
 -- @tparam table opts a table with optional parameters:
 -- @tparam string filter denotes what type of information to retreive, valid values:
---   *'name'
+--   * 'name'
 --   * 'masteries'
 --   * 'runes'
 -- @tparam long opts.expire how long in seconds to cache a response (defaults to 24hrs, i.e. 24*60*60)

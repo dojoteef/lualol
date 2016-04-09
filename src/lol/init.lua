@@ -5,7 +5,7 @@
 
 local lol = {}
 local modules = {
-    api=true,cache=true,game=true,matchlist=true,summoner=true,utils=true
+    api=true,cache=true,game=true,league=true,match=true,matchlist=true,summoner=true,utils=true
 }
 
 setmetatable(lol, {

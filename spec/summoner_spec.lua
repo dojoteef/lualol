@@ -85,19 +85,17 @@ describe('lol.summoner', function()
             end)
 
             it('uses api get on cache miss', function()
-                local s1 = spy.new(function() end)
-                local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                testSummoner:getByNames({'one','two'}, {callback=s1})
+                local s1 = stub(testSummoner.api, 'get',function() end)
+                testSummoner:getByNames({'one','two'})
 
-                assert.spy(s1).called(1)
-                assert.stub(s2).called(1)
+                assert.stub(s1).called(1)
 
                 local url = {
                     path='/api/lol/${region}/v${version}/summoner/by-name/${summonerNames}',
                     params={version=testSummoner.version,summonerNames='one,two'},
                 }
-                assert.stub(s2).called_with(testSummoner.api, match.same(url),match.is_function())
-                s2:revert()
+                assert.stub(s1).called_with(testSummoner.api, match.same(url),match.is_function())
+                s1:revert()
             end)
 
             local cacheForXSecsFn = function(secs)
@@ -225,19 +223,17 @@ describe('lol.summoner', function()
 
             insulate('summoner', function()
                 it('uses api get on cache miss', function()
-                    local s1 = spy.new(function() end)
-                    local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                    testSummoner:getByIds({1,2}, {callback=s1})
+                    local s1 = stub(testSummoner.api, 'get',function() end)
+                    testSummoner:getByIds({1,2})
 
-                    assert.spy(s1).called(1)
-                    assert.stub(s2).called(1)
+                    assert.stub(s1).called(1)
 
                     local url = {
                         path='/api/lol/${region}/v${version}/summoner/${summonerIds}${filter}',
                         params={version=testSummoner.version,summonerIds='1,2',filter=''},
                     }
-                    assert.stub(s2).called_with(testSummoner.api,match.same(url),match.is_function())
-                    s2:revert()
+                    assert.stub(s1).called_with(testSummoner.api,match.same(url),match.is_function())
+                    s1:revert()
                 end)
 
                 local function dataFromRes(res)
@@ -358,19 +354,17 @@ describe('lol.summoner', function()
             insulate('name', function()
                 local filter = 'name'
                 it('uses api get on cache miss', function()
-                    local s1 = spy.new(function() end)
-                    local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                    testSummoner:getByIds({1,2}, {callback=s1,filter=filter})
+                    local s1 = stub(testSummoner.api, 'get',function() end)
+                    testSummoner:getByIds({1,2}, {filter=filter})
 
-                    assert.spy(s1).called(1)
-                    assert.stub(s2).called(1)
+                    assert.stub(s1).called(1)
 
                     local url = {
                         path='/api/lol/${region}/v${version}/summoner/${summonerIds}${filter}',
                         params={version=testSummoner.version,summonerIds='1,2',filter='/'..filter},
                     }
-                    assert.stub(s2).called_with(testSummoner.api,match.same(url),match.is_function())
-                    s2:revert()
+                    assert.stub(s1).called_with(testSummoner.api,match.same(url),match.is_function())
+                    s1:revert()
                 end)
 
                 local function dataFromRes(res)
@@ -436,19 +430,17 @@ describe('lol.summoner', function()
             insulate('masteries and runes', function()
                 local filterTestFn = function(filter)
                     it('uses api get on cache miss', function()
-                        local s1 = spy.new(function() end)
-                        local s2 = stub(testSummoner.api, 'get',function() s1() end)
-                        testSummoner:getByIds({1,2}, {callback=s1,filter=filter})
+                        local s1 = stub(testSummoner.api, 'get',function() end)
+                        testSummoner:getByIds({1,2}, {filter=filter})
 
-                        assert.spy(s1).called(1)
-                        assert.stub(s2).called(1)
+                        assert.stub(s1).called(1)
 
                         local url = {
                             path='/api/lol/${region}/v${version}/summoner/${summonerIds}${filter}',
                             params={version=testSummoner.version,summonerIds='1,2',filter='/'..filter},
                         }
-                        assert.stub(s2).called_with(testSummoner.api,match.same(url),match.is_function())
-                        s2:revert()
+                        assert.stub(s1).called_with(testSummoner.api,match.same(url),match.is_function())
+                        s1:revert()
                     end)
 
                     local function dataFromRes(res)
