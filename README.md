@@ -20,7 +20,7 @@ that I can run some analysis over the data.
 ### Application Specific Modules
 
   * `game`: this wraps the game League of Legends API calls
-  * `matchlist`: this wraps the match League of Legends API calls
+  * `match`: this wraps the match League of Legends API calls
   * `matchlist`: this wraps the matchlist League of Legends API calls
   * `league`: this wraps the league League of Legends API calls
   * `summoner`: this wraps the summoner League of Legends API calls

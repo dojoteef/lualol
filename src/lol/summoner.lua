@@ -89,9 +89,11 @@ function _summoner:getByNames(names, opts)
     local cache = self.api.cache
     local expire = opts.expire or 24*60*60
     local onResponse = function(res, code, headers)
-        for name,summoner in pairs(res) do
-            cacheSummonerName(cache, name, summoner.id)
-            cache:set(cacheKeyForId(summoner.id),summoner,expire)
+        if code and code == 200 then
+            for name,summoner in pairs(res) do
+                cacheSummonerName(cache, name, summoner.id)
+                cache:set(cacheKeyForId(summoner.id),summoner,expire)
+            end
         end
 
         if opts.callback then
@@ -172,11 +174,13 @@ function _summoner:getByIds(ids, opts)
     local expire = opts.expire or 24*60*60
     local onResponse = function(res, code, headers)
         local data = {}
-        for _,summoner in pairs(res) do
-            local name = cacheSummonerName(cache, summoner.name, summoner.id)
-            cache:set(cacheKeyForId(summoner.id),summoner,expire)
+        if code and code == 200 then
+            for _,summoner in pairs(res) do
+                local name = cacheSummonerName(cache, summoner.name, summoner.id)
+                cache:set(cacheKeyForId(summoner.id),summoner,expire)
 
-            data[name] = summoner
+                data[name] = summoner
+            end
         end
 
         if opts.callback then
@@ -193,11 +197,13 @@ function _summoner:getByIds(ids, opts)
     local onFilterResponse = {
         name=function(res, code, headers)
             local data = {}
-            for idstr,name in pairs(res) do
-                local id = tonumber(idstr)
-                cacheSummonerName(cache, name, id)
+            if code and code == 200 then
+                for idstr,name in pairs(res) do
+                    local id = tonumber(idstr)
+                    cacheSummonerName(cache, name, id)
 
-                data[id] = name
+                    data[id] = name
+                end
             end
 
             if opts.callback then
@@ -206,11 +212,13 @@ function _summoner:getByIds(ids, opts)
         end,
         masteries=function(res, code, headers)
             local data = {}
-            for idstr,val in pairs(res) do
-                local id = tonumber(idstr)
-                cache:set(cacheKeyForMasteries(id),val.pages,expire)
+            if code and code == 200 then
+                for idstr,val in pairs(res) do
+                    local id = tonumber(idstr)
+                    cache:set(cacheKeyForMasteries(id),val.pages,expire)
 
-                data[id] = val.pages
+                    data[id] = val.pages
+                end
             end
 
             if opts.callback then
@@ -219,11 +227,13 @@ function _summoner:getByIds(ids, opts)
         end,
         runes=function(res, code, headers)
             local data = {}
-            for idstr,val in pairs(res) do
-                local id = tonumber(idstr)
-                cache:set(cacheKeyForRunes(id),val.pages,expire)
+            if code and code == 200 then
+                for idstr,val in pairs(res) do
+                    local id = tonumber(idstr)
+                    cache:set(cacheKeyForRunes(id),val.pages,expire)
 
-                data[id] = val.pages
+                    data[id] = val.pages
+                end
             end
 
             if opts.callback then

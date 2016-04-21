@@ -103,35 +103,37 @@ function _league:getLeague(league, queue, opts)
     local cache = self.api.cache
     local expire = opts.expire or 7*24*60*60
     local onResponse = function(res, code, headers)
-        local leagueCacheKey = cacheKeyForLeague(res.queue, res.tier)
-        cache:set(leagueCacheKey,res,expire)
+        if code and code == 200 then
+            local leagueCacheKey = cacheKeyForLeague(res.queue, res.tier)
+            cache:set(leagueCacheKey,res,expire)
 
-        local idtype = _league.RankedQueues[queue]
-        if res.entries then
-            for _,entry in ipairs(res.entries) do
-                -- if a cache entry already exists for this summoner or team, simply update the
-                -- league entry for the particular league rather than overwriting the entire
-                -- list of entries
-                local cacheKey = cacheKeyForId(entry.playerOrTeamId, idtype)
+            local idtype = _league.RankedQueues[queue]
+            if res.entries then
+                for _,entry in ipairs(res.entries) do
+                    -- if a cache entry already exists for this summoner or team, simply update the
+                    -- league entry for the particular league rather than overwriting the entire
+                    -- list of entries
+                    local cacheKey = cacheKeyForId(entry.playerOrTeamId, idtype)
 
-                -- find the existing cached entry
-                local cacheData = cache:get(cacheKey) or {}
-                local entryIndex = #cacheData+1
-                for index,cachedEntry in ipairs(cacheData) do
-                    if cachedEntry.queue == res.queue and cachedEntry.tier == res.tier then
-                        entryIndex = index
-                        break
+                    -- find the existing cached entry
+                    local cacheData = cache:get(cacheKey) or {}
+                    local entryIndex = #cacheData+1
+                    for index,cachedEntry in ipairs(cacheData) do
+                        if cachedEntry.queue == res.queue and cachedEntry.tier == res.tier then
+                            entryIndex = index
+                            break
+                        end
                     end
+
+                    -- make a new entry including the queue and tier along with
+                    -- the key/value pairs of the entry
+                    local cacheEntry = pltablex.deepcopy(entry)
+                    cacheEntry.queue = res.queue
+                    cacheEntry.tier = res.tier
+
+                    cacheData[entryIndex] = cacheEntry
+                    cache:set(cacheKey,cacheData,expire)
                 end
-
-                -- make a new entry including the queue and tier along with
-                -- the key/value pairs of the entry
-                local cacheEntry = pltablex.deepcopy(entry)
-                cacheEntry.queue = res.queue
-                cacheEntry.tier = res.tier
-
-                cacheData[entryIndex] = cacheEntry
-                cache:set(cacheKey,cacheData,expire)
             end
         end
 
@@ -178,45 +180,47 @@ function _league:getByIds(ids, idtype, opts)
     local expire = opts.expire or 7*24*60*60
     local onResponse = function(res, code, headers)
         local data = {}
-        for _,leagues in pairs(res) do
-            for _,league in ipairs(leagues) do
-                -- clear out any participant id from the league as it's specific to this request,
-                -- rather than to the league itself
-                league.participantId = nil
+        if code and code == 200 then
+            for _,leagues in pairs(res) do
+                for _,league in ipairs(leagues) do
+                    -- clear out any participant id from the league as it's specific to this request,
+                    -- rather than to the league itself
+                    league.participantId = nil
 
-                -- if we had a cached league we looked up from a summoner or team id, clear it
-                -- as we have just gotten updated data for the league and we only want
-                -- to return a league once
-                local leagueCacheKey = cacheKeyForLeague(league.queue, league.tier)
-                cachedLeagues[leagueCacheKey] = nil
+                    -- if we had a cached league we looked up from a summoner or team id, clear it
+                    -- as we have just gotten updated data for the league and we only want
+                    -- to return a league once
+                    local leagueCacheKey = cacheKeyForLeague(league.queue, league.tier)
+                    cachedLeagues[leagueCacheKey] = nil
 
-                cache:set(leagueCacheKey,league,expire)
-                data[leagueCacheKey] = league
+                    cache:set(leagueCacheKey,league,expire)
+                    data[leagueCacheKey] = league
 
-                for _,entry in ipairs(league.entries) do
-                    -- if a cache entry already exists for this summoner or team, simply update the
-                    -- league entry for the particular league rather than overwriting the entire
-                    -- list of entries
-                    local cacheKey = cacheKeyForId(entry.playerOrTeamId, idtype)
+                    for _,entry in ipairs(league.entries) do
+                        -- if a cache entry already exists for this summoner or team, simply update the
+                        -- league entry for the particular league rather than overwriting the entire
+                        -- list of entries
+                        local cacheKey = cacheKeyForId(entry.playerOrTeamId, idtype)
 
-                    -- find the existing cached entry
-                    local cacheData = cache:get(cacheKey) or {}
-                    local entryIndex = #cacheData+1
-                    for index,cachedEntry in ipairs(cacheData) do
-                        if cachedEntry.queue == league.queue and cachedEntry.tier == league.tier then
-                            entryIndex = index
-                            break
+                        -- find the existing cached entry
+                        local cacheData = cache:get(cacheKey) or {}
+                        local entryIndex = #cacheData+1
+                        for index,cachedEntry in ipairs(cacheData) do
+                            if cachedEntry.queue == league.queue and cachedEntry.tier == league.tier then
+                                entryIndex = index
+                                break
+                            end
                         end
+
+                        -- make a new entry including the queue and tier along with
+                        -- the key/value pairs of the entry
+                        local cacheEntry = pltablex.deepcopy(entry)
+                        cacheEntry.queue = league.queue
+                        cacheEntry.tier = league.tier
+
+                        cacheData[entryIndex] = cacheEntry
+                        cache:set(cacheKey,cacheData,expire)
                     end
-
-                    -- make a new entry including the queue and tier along with
-                    -- the key/value pairs of the entry
-                    local cacheEntry = pltablex.deepcopy(entry)
-                    cacheEntry.queue = league.queue
-                    cacheEntry.tier = league.tier
-
-                    cacheData[entryIndex] = cacheEntry
-                    cache:set(cacheKey,cacheData,expire)
                 end
             end
         end

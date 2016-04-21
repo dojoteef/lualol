@@ -19,7 +19,75 @@ local dir = require('pl.dir')
 local file = require('pl.file')
 local os = require('os')
 local path = require('pl.path')
+local tablex = require('pl.tablex')
 local utils = require('pl.utils')
+
+local queue = {}
+queue.__index = queue
+setmetatable(queue, {
+    __call = function(_,maxLen)
+        return queue.new(maxLen)
+    end})
+
+function queue.new(maxLen)
+    local obj = {}
+    obj.maxLen = maxLen
+    obj.list = {first=1,last=0,count=0}
+
+    return setmetatable(obj, queue)
+end
+
+function queue:push(value)
+    local list = self.list
+    local last = list.last + 1
+    list.count = list.count + 1
+
+    list.last = last
+    list[last] = value
+
+    if self.maxLen and list.count > self.maxLen then
+        return self:pop()
+    end
+end
+
+function queue:pop()
+    local list = self.list
+    local first = list.first
+    if first > list.last then error("list is empty") end
+
+    local value = list[first]
+    list[first] = nil -- to allow garbage collection
+    list.first = first + 1
+    list.count = list.count - 1
+
+    self:skipEmpty()
+
+    return value
+end
+
+function queue:skipEmpty()
+    local list = self.list
+    while list[list.first] == nil and list.first <= list.last do
+        list.first = list.first + 1
+    end
+end
+
+function queue:clear()
+    self.list = {first=1,last=0,count=0}
+end
+
+function queue:remove(entries)
+    local list = self.list
+    for k, v in ipairs(list) do
+        if entries[v] then
+            list.count = list.count - 1
+            list[k] = nil
+        end
+    end
+
+    self:skipEmpty()
+end
+
 
 --- This class encapsulates making adding and retreiving elements from a cache
 -- @type cache
@@ -30,17 +98,62 @@ setmetatable(_cache, {
         return _cache.new(cacheDir)
     end})
 
+local function initialize(obj)
+    -- clear any expired entries
+    _cache.clearExpired(obj)
+
+    -- go through on disk files and see if we have too many, then
+    -- remove based on last accessed time
+    local cachedFiles = {}
+    for _,cacheFile in pairs(dir.getfiles(obj.dir)) do
+        cachedFiles[cacheFile] = file.access_time(cacheFile)
+    end
+
+    for cacheFile,_ in tablex.sortv(cachedFiles) do
+        local removed = obj.cacheSize.disk.entries:push(cacheFile)
+        if removed then
+            file.delete(removed)
+        end
+    end
+end
+
 --- Create a new cache object
 -- @tparam string cacheDir the directory where to store cache entries
+-- @tparam table opts a table of optional parameters
+-- @tparam boolean opts.weak a boolean which denotes if the in memory cache should be a weak table (i.e. allow
+-- the entries to be garabage collected unless something external is holding onto them). Note that this will
+-- not effect the entry being removed from disk, only from memory. So if you try to retreive it in the future
+-- (and it hasn't expired) it will still be found in the cache. This option *DOES NOT WORK WITH `cacheSize`*,
+-- so do not specify a memory `cacheSize` if you specify `weak`.
+-- @tparam table opts.cacheSize a table which describes the size of the cache. The table can have two entries:
+-- `memory` and `disk` which are tables of the form {count = x, size = y}, where `count` is the maximum number
+-- of elements to keep and `size` is the maximum size in bytes.
 -- @return a new cache object
 -- @function cache:cache
-function _cache.new(cacheDir)
+function _cache.new(cacheDir, opts)
     utils.assert_arg(1,path.abspath(cacheDir),'string',path.isdir,'not a directory')
 
     local obj = {}
-    obj.cache = {}
     obj.dir = path.abspath(cacheDir)
 
+    obj.cache = {}
+    if opts and opts.weak then
+        setmetatable(obj.cache, {__mode='kv'})
+    end
+
+    obj.maxCacheSize = opts and opts.cacheSize or {}
+    for _,storage in pairs{'disk', 'memory'} do
+        obj.maxCacheSize[storage] = obj.maxCacheSize[storage] or {}
+        obj.maxCacheSize[storage].size = obj.maxCacheSize[storage].size or math.huge
+        obj.maxCacheSize[storage].count = obj.maxCacheSize[storage].count or math.huge
+    end
+
+    obj.cacheSize = {
+        disk={bytes=0,entries=queue(obj.maxCacheSize.disk.count)},
+        memory={bytes=0,entries=queue(obj.maxCacheSize.memory.count)}
+    }
+
+    initialize(obj)
     return setmetatable(obj, _cache)
 end
 
@@ -48,31 +161,53 @@ local function isExpired(entry)
     return entry and entry.expires and os.difftime(entry.expires, os.time()) < 0
 end
 
+--- Drops all cache entries from memory, but keeps them in the disk cache. This can be used to save memory in lua.
+-- @function cache:dropAll
+function _cache:dropAll()
+    self.cache = {}
+    self.cacheSize.memory.bytes = 0
+    self.cacheSize.memory.entries:clear()
+
+    collectgarbage()
+end
+
 --- Clear all entries from the cache. This includes on disk and in memory.
 -- @function cache:clearAll
 function _cache:clearAll()
-    self.cache = {}
+    self:dropAll()
     for _,cacheFile in pairs(dir.getfiles(self.dir)) do
         file.delete(cacheFile)
     end
+
+    self.cacheSize.disk.bytes = 0
+    self.cacheSize.disk.entries:clear()
 end
 
 --- Clear all expired entries from the cache. This includes on disk and in memory.
 -- @function cache:clearExpired
 function _cache:clearExpired()
+    local removed = {}
     for digest,entry in pairs(self.cache) do
         if isExpired(entry) then
             self.cache[digest] = nil
             file.delete(entry.file)
+
+            removed[digest] = true
         end
     end
+    self.cacheSize.memory.entries:remove(removed)
 
+    removed = {}
     for _,cacheFile in pairs(dir.getfiles(self.dir)) do
         local entry = cjson.decode(file.read(cacheFile))
         if isExpired(entry) then
             file.delete(cacheFile)
+
+            local digest = string.match(cacheFile, self.dir..path.sep..'(.+)')
+            removed[digest] = true
         end
     end
+    self.cacheSize.disk.entries:remove(removed)
 end
 
 local function getFilename(basedir, digest)
@@ -106,6 +241,10 @@ function _cache:get(key)
 
     -- Then check for expiration
     if isExpired(entry) then
+        local remove = {[digest]=true}
+        self.cacheSize.disk.entries:remove(remove)
+        self.cacheSize.memory.entries:remove(remove)
+
         file.delete(entry.file)
         entry = nil
     end
@@ -132,8 +271,20 @@ function _cache:set(key, value, expires)
 
     local digest = crypto.digest('md5', keyString)
     local cacheFile = getFilename(self.dir, digest)
+
+    -- If adding the file to disk would cause max entries to be exceeded then remove the last used entry
+    local removed = self.cacheSize.disk.entries:push(digest)
+    if removed then
+        local removedFile = getFilename(self.dir, removed)
+        file.delete(removedFile)
+    end
     file.write(cacheFile, cjson.encode(entry))
 
+    -- Similarly remove from in memory cache if needed
+    removed = self.cacheSize.memory.entries:push(digest)
+    if removed then
+        self.cache[removed] = nil
+    end
     self.cache[digest] = entry
     entry.file = cacheFile
 end

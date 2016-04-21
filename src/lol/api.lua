@@ -12,6 +12,7 @@ local cjson = require('cjson')
 local file = require('pl.file')
 local https = require('ssl.https')
 local path = require('pl.path')
+local socket = require('socket')
 local stringx = require('pl.stringx')
 local table = require('table')
 local tablex = require('pl.tablex')
@@ -38,8 +39,8 @@ local _api = {
 }
 _api.__index = _api
 setmetatable(_api, {
-    __call = function(_,keyfile,regionid,cachedir,options)
-        return _api.new(keyfile,regionid,cachedir,options)
+    __call = function(_,keyfile,regionid,cachedir,opts)
+        return _api.new(keyfile,regionid,cachedir,opts)
     end
 })
 
@@ -61,11 +62,11 @@ setmetatable(_api, {
 -- @tparam string keyfile location of the file with the League of Legends API Key in it
 -- @tparam string regionid the id of the @{Regions|regional endpoint} to get data from
 -- @tparam string cachedir a directory to cache responses from the API (_NOTE_: a subdirectory will be made for the region inside the cache directory)
--- @tparam table options a table with optional parameters
--- @tparam bool options.verbose whether to have verbose out when making API requests
+-- @tparam table opts a table with optional parameters (it gets passed to the cache as well)
+-- @tparam bool opts.verbose whether to have verbose out when making API requests
 -- @return a new api object
 -- @function api:api
-function _api.new(keyfile, regionid, cachedir, options)
+function _api.new(keyfile, regionid, cachedir, opts)
     utils.assert_arg(1,keyfile,'string',path.isfile,'not a file')
     utils.assert_arg(2,regionid,'string',function(id) return _api.Regions[id] end,'not a valid region')
 
@@ -78,14 +79,14 @@ function _api.new(keyfile, regionid, cachedir, options)
             path.mkdir(dir)
         end
 
-        apiCache = cache(dir)
+        apiCache = cache(dir, opts)
     end
 
     local obj = {}
     obj.cache = apiCache
     obj.key = stringx.strip(file.read(keyfile))
     obj.region = _api.Regions[regionid]
-    obj.options = options or {}
+    obj.opts = opts or {}
 
     return setmetatable(obj, _api)
 end
@@ -126,6 +127,13 @@ function _api:buildUrlString(turl)
     return self.region.host..pathString..'?'..queryString
 end
 
+-- These are codes that cause a retry of a get request
+local retryOnCodes = {
+    [429] = true, -- Rate limit exceeded
+    [500] = true, -- Internal server error
+    [503] = true, -- Service unavailable
+}
+
 --- Make a get request to the League of Legends API
 -- @tparam table url a table with the url parameters
 -- @tparam string url.path a string path using `${variable}` for replaceable components
@@ -136,10 +144,45 @@ end
 -- @function api:get
 function _api:get(turl, callback)
     local urlString = self:buildUrlString(turl)
-    if self.options.verbose then print(urlString) end
+    if self.opts.verbose then print(urlString) end
 
-    local res, code, headers, status = https.request(urlString)
-    if self.options.verbose then print(status) end
+    if self.opts.rateLimits then
+        self.rates = self.rates or {}
+
+        for _, rateLimit in ipairs(self.opts.rateLimits) do
+            if not self.rates[rateLimit] then
+                self.rates[rateLimit] = { count = 0, intervalStart = os.time() }
+            end
+
+            -- When calculating the elapsed time subtract 1 in order to give ourselves a one
+            -- second leeway between when we think the interval started to account for things
+            -- such as processing speed and network latency. It's a crude measure, but should
+            -- hopefully cause fewer potential rate limiting issues vs not having the buffer
+            -- in there.
+            local rate = self.rates[rateLimit]
+            local elapsed = os.difftime(os.time(), rate.intervalStart) - 1
+            if elapsed > rateLimit.interval then
+                rate.count = 1
+                rate.intervalStart = os.time()
+            elseif rate.count + 1 > rateLimit.requests then
+                -- wait until we should be allowed to make another request
+                socket.sleep(rateLimit.interval - elapsed)
+
+                rate.count = 1
+                rate.intervalStart = os.time()
+            else
+                rate.count = rate.count + 1
+            end
+        end
+    end
+
+    local tries = 0
+    local res, code, headers, status
+    repeat
+        tries = tries + 1
+        res, code, headers, status = https.request(urlString)
+        if self.opts.verbose then print(status) end
+    until not retryOnCodes[code] or self.opts.maxRetries == nil or tries > self.opts.maxRetries
 
     if callback then
         if headers and headers['content-type'] and string.match(headers['content-type'],'application/json') then

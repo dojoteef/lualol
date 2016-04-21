@@ -194,7 +194,9 @@ function _matchlist:getBySummonerId(summonerId, opts)
     local cacheKey = {api='matchlist',summonerId=summonerId,query=query}
     local expire = opts.expire or 60*60
     local onResponse = function(res, code, headers)
-        cache:set(cacheKey,res,expire)
+        if code and code == 200 then
+            cache:set(cacheKey,res,expire)
+        end
 
         if opts.callback then
             opts.callback(res, code, headers)

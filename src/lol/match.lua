@@ -48,10 +48,12 @@ function _match:getById(matchId, opts)
     local cacheKey = {api='match',matchId=matchId}
     local expire = opts.expire or 30*24*60*60
     local onResponse = function(res, code, headers)
-        -- store off the fact that we tried to include timeline data so that
-        -- we just use the cache if the api doesn't have timeline data for the match
-        res.timeline = res.timeline or (opts.includeTimeline and {})
-        cache:set(cacheKey,res,expire)
+        if code and code == 200 then
+            -- store off the fact that we tried to include timeline data so that
+            -- we just use the cache if the api doesn't have timeline data for the match
+            res.timeline = res.timeline or (opts.includeTimeline and {})
+            cache:set(cacheKey,res,expire)
+        end
 
         if opts.callback then
             opts.callback(res, code, headers)

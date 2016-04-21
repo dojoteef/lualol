@@ -44,7 +44,9 @@ function _game:getBySummonerId(summonerId, opts)
     local cacheKey = {api='game',summonerId=summonerId}
     local expire = opts.expire or 5*60*60
     local onResponse = function(res, code, headers)
-        cache:set(cacheKey,res,expire)
+        if code and code == 200 then
+            cache:set(cacheKey,res,expire)
+        end
 
         if opts.callback then
             opts.callback(res, code, headers)
