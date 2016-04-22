@@ -87,6 +87,15 @@ function _api.new(keyfile, regionid, cachedir, opts)
     obj.key = stringx.strip(file.read(keyfile))
     obj.region = _api.Regions[regionid]
     obj.opts = opts or {}
+    obj.rates = {}
+
+    if obj.opts.rateLimits then
+        for _, rateLimit in ipairs(obj.opts.rateLimits) do
+            if not obj.rates[rateLimit] then
+                obj.rates[rateLimit] = { available = 0 }
+            end
+        end
+    end
 
     return setmetatable(obj, _api)
 end
@@ -134,6 +143,48 @@ local retryOnCodes = {
     [503] = true, -- Service unavailable
 }
 
+local function startRequest(api)
+    local sleepTime = 0
+    for rateLimit, rate in pairs(api.rates) do
+        local limit = rateLimit.count
+        local interval = rateLimit.interval
+        local elapsed = socket.gettime() - (rate.lastRequestTime or socket.gettime())
+        rate.available = math.min(rate.available + (elapsed * limit / interval), limit)
+
+        if rate.available < 1 then
+            sleepTime = math.max(sleepTime, math.ceil(1 - rate.available) * (interval / limit))
+            rate.available = 0
+        else
+            rate.available = rate.available - 1
+        end
+
+    end
+
+    if sleepTime > 0 then
+        -- wait until we should be allowed to make another request
+        socket.sleep(sleepTime)
+    end
+end
+
+local function finishRequest(api, code)
+    local sleepTime = 0
+    local time = socket.gettime()
+    for rateLimit, rate in pairs(api.rates) do
+        rate.lastRequestTime = time
+
+        -- XXX: Remove in the future. This is a conservative check to ensure we have a good rate.
+        if code == 429 then
+            rate.available = 0
+            sleepTime = math.max(sleepTime, rateLimit.interval)
+        end
+    end
+
+    if sleepTime > 0 then
+        -- wait until we should be allowed to make another request
+        socket.sleep(sleepTime)
+    end
+end
+
 --- Make a get request to the League of Legends API
 -- @tparam table url a table with the url parameters
 -- @tparam string url.path a string path using `${variable}` for replaceable components
@@ -146,41 +197,13 @@ function _api:get(turl, callback)
     local urlString = self:buildUrlString(turl)
     if self.opts.verbose then print(urlString) end
 
-    if self.opts.rateLimits then
-        self.rates = self.rates or {}
-
-        for _, rateLimit in ipairs(self.opts.rateLimits) do
-            if not self.rates[rateLimit] then
-                self.rates[rateLimit] = { count = 0, intervalStart = os.time() }
-            end
-
-            -- When calculating the elapsed time subtract 1 in order to give ourselves a one
-            -- second leeway between when we think the interval started to account for things
-            -- such as processing speed and network latency. It's a crude measure, but should
-            -- hopefully cause fewer potential rate limiting issues vs not having the buffer
-            -- in there.
-            local rate = self.rates[rateLimit]
-            local elapsed = os.difftime(os.time(), rate.intervalStart) - 1
-            if elapsed > rateLimit.interval then
-                rate.count = 1
-                rate.intervalStart = os.time()
-            elseif rate.count + 1 > rateLimit.requests then
-                -- wait until we should be allowed to make another request
-                socket.sleep(rateLimit.interval - elapsed)
-
-                rate.count = 1
-                rate.intervalStart = os.time()
-            else
-                rate.count = rate.count + 1
-            end
-        end
-    end
-
     local tries = 0
     local res, code, headers, status
     repeat
         tries = tries + 1
+        startRequest(self)
         res, code, headers, status = https.request(urlString)
+        finishRequest(self, code)
         if self.opts.verbose then print(status) end
     until not retryOnCodes[code] or self.opts.maxRetries == nil or tries > self.opts.maxRetries
 

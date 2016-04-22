@@ -99,6 +99,16 @@ setmetatable(_cache, {
     end})
 
 local function initialize(obj)
+    -- clear out any bogus data (this can happen if you kill lua while it is writing
+    -- out a cache file)
+    for _,cacheFile in pairs(dir.getfiles(obj.dir)) do
+        local data = file.read(cacheFile)
+        local ok,_ = pcall(function() return cjson.decode(data) end)
+        if not ok then
+            file.delete(cacheFile)
+        end
+    end
+
     -- clear any expired entries
     _cache.clearExpired(obj)
 
@@ -109,6 +119,8 @@ local function initialize(obj)
         cachedFiles[cacheFile] = file.access_time(cacheFile)
     end
 
+    -- now that we've collected all the fils, sort by access time
+    -- so we know which ones to remove
     for cacheFile,_ in tablex.sortv(cachedFiles) do
         local removed = obj.cacheSize.disk.entries:push(cacheFile)
         if removed then
@@ -199,8 +211,9 @@ function _cache:clearExpired()
 
     removed = {}
     for _,cacheFile in pairs(dir.getfiles(self.dir)) do
-        local entry = cjson.decode(file.read(cacheFile))
-        if isExpired(entry) then
+        local data = file.read(cacheFile)
+        local ok,entry = pcall(function() return cjson.decode(data) end)
+        if not ok or isExpired(entry) then
             file.delete(cacheFile)
 
             local digest = string.match(cacheFile, self.dir..path.sep..'(.+)')
@@ -219,8 +232,12 @@ local function getFromDisk(basedir, digest)
     local cacheFile = getFilename(basedir, digest)
 
     if path.exists(cacheFile) then
-        entry = cjson.decode(file.read(cacheFile))
-        entry.file = cacheFile
+        local ok
+        local data = file.read(cacheFile)
+        ok,entry = pcall(function() return cjson.decode(data) end)
+        if ok then
+            entry.file = cacheFile
+        end
     end
 
     return entry
