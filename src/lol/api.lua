@@ -92,7 +92,7 @@ function _api.new(keyfile, regionid, cachedir, opts)
     if obj.opts.rateLimits then
         for _, rateLimit in ipairs(obj.opts.rateLimits) do
             if not obj.rates[rateLimit] then
-                obj.rates[rateLimit] = { available = 0 }
+                obj.rates[rateLimit] = { available = 0, backoff = 1 }
             end
         end
     end
@@ -181,8 +181,12 @@ local function finishRequest(api, code)
 
         if code == 429 then
             -- went over the rate limit, subtract one from available and try again
-            rate.available = rate.available - 1
+            rate.available = rate.available - rate.backoff
+            rate.backoff = 2 * rate.backoff -- exponential back off in case of going over the rate limit
             sleepTime = math.max(sleepTime, sleepTimeForRate(rate, rateLimit))
+        else
+            -- reset backoff on success
+            rate.backoff = 1
         end
     end
 

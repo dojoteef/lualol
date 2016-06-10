@@ -119,7 +119,7 @@ local function initialize(obj)
         cachedFiles[cacheFile] = file.access_time(cacheFile)
     end
 
-    -- now that we've collected all the fils, sort by access time
+    -- now that we've collected all the files, sort by access time
     -- so we know which ones to remove
     for cacheFile,_ in tablex.sortv(cachedFiles) do
         local removed = obj.cacheSize.disk.entries:push(cacheFile)
@@ -267,6 +267,11 @@ function _cache:get(key)
     end
 
     -- Finally update the value in case it's expired
+    -- First remove from the in memory cache if needed
+    local removed = self.cacheSize.memory.entries:push(digest)
+    if removed then
+        self.cache[removed] = nil
+    end
     self.cache[digest] = entry
     return entry and entry.value or nil
 end
