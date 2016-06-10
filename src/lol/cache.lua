@@ -94,8 +94,8 @@ end
 local _cache = {}
 _cache.__index = _cache
 setmetatable(_cache, {
-    __call = function(_,cacheDir)
-        return _cache.new(cacheDir)
+    __call = function(_,cacheDir,opts)
+        return _cache.new(cacheDir,opts)
     end})
 
 local function initialize(obj)

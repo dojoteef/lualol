@@ -143,6 +143,13 @@ local retryOnCodes = {
     [503] = true, -- Service unavailable
 }
 
+local function sleepTimeForRate(rate, rateLimit)
+    local limit = rateLimit.count
+    local interval = rateLimit.interval
+
+    return math.ceil(1 - rate.available) * (interval / limit)
+end
+
 local function startRequest(api)
     local sleepTime = 0
     for rateLimit, rate in pairs(api.rates) do
@@ -152,7 +159,7 @@ local function startRequest(api)
         rate.available = math.min(rate.available + (elapsed * limit / interval), limit)
 
         if rate.available < 1 then
-            sleepTime = math.max(sleepTime, math.ceil(1 - rate.available) * (interval / limit))
+            sleepTime = math.max(sleepTime, sleepTimeForRate(rate, rateLimit))
             rate.available = 0
         else
             rate.available = rate.available - 1
@@ -172,10 +179,10 @@ local function finishRequest(api, code)
     for rateLimit, rate in pairs(api.rates) do
         rate.lastRequestTime = time
 
-        -- XXX: Remove in the future. This is a conservative check to ensure we have a good rate.
         if code == 429 then
-            rate.available = 0
-            sleepTime = math.max(sleepTime, rateLimit.interval)
+            -- went over the rate limit, subtract one from available and try again
+            rate.available = rate.available - 1
+            sleepTime = math.max(sleepTime, sleepTimeForRate(rate, rateLimit))
         end
     end
 
