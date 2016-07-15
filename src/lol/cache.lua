@@ -99,32 +99,20 @@ setmetatable(_cache, {
     end})
 
 local function initialize(obj)
-    -- clear out any bogus data (this can happen if you kill lua while it is writing
-    -- out a cache file)
-    for _,cacheFile in pairs(dir.getfiles(obj.dir)) do
-        local data = file.read(cacheFile)
-        local ok,_ = pcall(function() return cjson.decode(data) end)
-        if not ok then
-            file.delete(cacheFile)
-        end
-    end
-
-    -- clear any expired entries
-    _cache.clearExpired(obj)
+    -- clear any expired entries, it additionally clears out any bogus data
+    -- (this can happen if you kill lua while it is writing out a cache file)
+    -- and returns a sorted list of cached files by last access time.
+    local _, cachedFiles = _cache.clearExpired(obj)
 
     -- go through on disk files and see if we have too many, then
     -- remove based on last accessed time
-    local cachedFiles = {}
-    for _,cacheFile in pairs(dir.getfiles(obj.dir)) do
-        cachedFiles[cacheFile] = file.access_time(cacheFile)
-    end
-
-    -- now that we've collected all the files, sort by access time
-    -- so we know which ones to remove
-    for cacheFile,_ in tablex.sortv(cachedFiles) do
+    for cacheFile,_ in cachedFiles do
         local removed = obj.cacheSize.disk.entries:push(cacheFile)
         if removed then
-            file.delete(removed)
+            local ok,err = file.delete(removed)
+            if not ok and obj.opts.verbose then
+                print(err)
+            end
         end
     end
 end
@@ -147,13 +135,14 @@ function _cache.new(cacheDir, opts)
 
     local obj = {}
     obj.dir = path.abspath(cacheDir)
+    obj.opts = opts or {}
 
     obj.cache = {}
-    if opts and opts.weak then
+    if obj.opts.weak then
         setmetatable(obj.cache, {__mode='kv'})
     end
 
-    obj.maxCacheSize = opts and opts.cacheSize or {}
+    obj.maxCacheSize = obj.opts.cacheSize or {}
     for _,storage in pairs{'disk', 'memory'} do
         obj.maxCacheSize[storage] = obj.maxCacheSize[storage] or {}
         obj.maxCacheSize[storage].size = obj.maxCacheSize[storage].size or math.huge
@@ -188,7 +177,10 @@ end
 function _cache:clearAll()
     self:dropAll()
     for _,cacheFile in pairs(dir.getfiles(self.dir)) do
-        file.delete(cacheFile)
+        local ok,err = file.delete(cacheFile)
+        if not ok and self.opts.verbose then
+            print(err)
+        end
     end
 
     self.cacheSize.disk.bytes = 0
@@ -202,25 +194,37 @@ function _cache:clearExpired()
     for digest,entry in pairs(self.cache) do
         if isExpired(entry) then
             self.cache[digest] = nil
-            file.delete(entry.file)
-
-            removed[digest] = true
+            local ok,err = file.delete(entry.file)
+            if ok then
+                removed[digest] = true
+            elseif self.opts.verbose then
+                print(err)
+            end
         end
     end
-    self.cacheSize.memory.entries:remove(removed)
 
-    removed = {}
+    local cachedFiles = {}
     for _,cacheFile in pairs(dir.getfiles(self.dir)) do
         local data = file.read(cacheFile)
         local ok,entry = pcall(function() return cjson.decode(data) end)
         if not ok or isExpired(entry) then
-            file.delete(cacheFile)
-
-            local digest = string.match(cacheFile, self.dir..path.sep..'(.+)')
-            removed[digest] = true
+            local err
+            ok,err = file.delete(cacheFile)
+            if ok then
+                local digest = string.match(cacheFile, self.dir..path.sep..'(.+)')
+                removed[digest] = true
+            elseif self.opts.verbose then
+                print(err)
+            end
+        else
+            cachedFiles[cacheFile] = file.access_time(cacheFile)
         end
     end
+
     self.cacheSize.disk.entries:remove(removed)
+    self.cacheSize.memory.entries:remove(removed)
+
+    return removed, tablex.sortv(cachedFiles)
 end
 
 local function getFilename(basedir, digest)
@@ -243,6 +247,29 @@ local function getFromDisk(basedir, digest)
     return entry
 end
 
+--- Remove an entry from the cache.
+-- @param key the key of the entry to find (**must be convertible to JSON**)
+-- @function cache:remove
+function _cache:remove(key)
+    -- First check the in memory cache
+    local keyString = cjson.encode(key)
+    local digest = crypto.digest('md5', keyString)
+
+    local remove = {[digest]=true}
+    self.cacheSize.disk.entries:remove(remove)
+    self.cacheSize.memory.entries:remove(remove)
+
+    local entry = getFromDisk(self.dir, digest)
+    if entry then
+        local ok, err = file.delete(entry.file)
+        if not ok and self.opts.verbose then
+            print(err)
+        end
+    end
+
+    self.cache[digest] = nil
+end
+
 --- Get an entry from the cache if it exists and hasn't expired.
 -- @param key the key of the entry to find (**must be convertible to JSON**)
 -- @return the value that was previously stored for the given key
@@ -262,7 +289,10 @@ function _cache:get(key)
         self.cacheSize.disk.entries:remove(remove)
         self.cacheSize.memory.entries:remove(remove)
 
-        file.delete(entry.file)
+        local ok, err = file.delete(entry.file)
+        if not ok and self.opts.verbose then
+            print(err)
+        end
         entry = nil
     end
 
@@ -298,7 +328,10 @@ function _cache:set(key, value, expires)
     local removed = self.cacheSize.disk.entries:push(digest)
     if removed then
         local removedFile = getFilename(self.dir, removed)
-        file.delete(removedFile)
+        local ok,err = file.delete(removedFile)
+        if not ok and self.opts.verbose then
+            print(err)
+        end
     end
     file.write(cacheFile, cjson.encode(entry))
 
