@@ -1,9 +1,9 @@
-#LuaLoL - Lua Library for the League of Legends API
+# LuaLoL - Lua Library for the League of Legends API
 
 [![Build Status](https://travis-ci.org/dojoteef/lualol.svg)](https://travis-ci.org/dojoteef/lualol)
 [![Coverage Status](https://coveralls.io/repos/github/dojoteef/lualol/badge.svg?branch=master)](https://coveralls.io/github/dojoteef/lualol?branch=master)
 
-##What does LuaLoL do?
+## What does LuaLoL do?
 
 LuaLoL is a small test project I made for fetching data from the [League of Legends
 API](http://developer.leagueoflegends.com). It's written in Lua since I wanted
@@ -25,7 +25,7 @@ that I can run some analysis over the data.
   * `league`: this wraps the league League of Legends API calls
   * `summoner`: this wraps the summoner League of Legends API calls
 
-##Requirements
+## Requirements
 
 This library depends on [Penlight](https://github.com/stevedonovan/Penlight)
 (pl), [LuaSocket](https://github.com/diegonehab/luasocket), 
@@ -47,7 +47,7 @@ having [OpenSSL](https://www.openssl.org) installed.
 
     > luarocks install lualol OPENSSL_DIR=/usr/local/opt/openssl/
 
-##Building the Documentation
+## Building the Documentation
 
 Requires [ldoc](https://github.com/stevedonovan/LDoc), which is available
 through LuaRocks.  Then it's a simple matter of running ldoc in the docs folder.
